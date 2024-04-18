@@ -1,0 +1,16 @@
+erDiagram
+    submissions {
+        text body_raw 
+        text headers_raw 
+        integer submission_id PK 
+        timestamp_with_time_zone submission_time 
+        uuid user_id FK 
+    }
+
+    user_metadata {
+        boolean is_anonymous 
+        integer usage_count 
+        uuid user_id PK,FK 
+    }
+
+    submissions }o--|| user_metadata : "user_id"
