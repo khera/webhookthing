@@ -119,6 +119,94 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 -- COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
 
 --
+-- Name: auth_login_as_anon(); Type: PROCEDURE; Schema: public; Owner: postgres
+--
+
+CREATE PROCEDURE "public"."auth_login_as_anon"()
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    PERFORM set_config('request.jwt.claims', null, true);
+    PERFORM set_config('role', 'anon', true);
+END;
+$$;
+
+ALTER PROCEDURE "public"."auth_login_as_anon"() OWNER TO "postgres";
+
+--
+-- Name: auth_login_as_service_role(); Type: PROCEDURE; Schema: public; Owner: postgres
+--
+
+CREATE PROCEDURE "public"."auth_login_as_service_role"()
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    PERFORM set_config('request.jwt.claims', null, true);
+    PERFORM set_config('role', 'service_role', true);
+END;
+$$;
+
+ALTER PROCEDURE "public"."auth_login_as_service_role"() OWNER TO "postgres";
+
+--
+-- Name: auth_login_as_user("text"); Type: PROCEDURE; Schema: public; Owner: postgres
+--
+
+CREATE PROCEDURE "public"."auth_login_as_user"(IN "user_email" "text")
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+    user_id UUID;
+BEGIN
+    SELECT id INTO user_id FROM auth.users WHERE email = user_email;
+    CALL auth_login_as_user_id(user_id);
+END;
+$$;
+
+ALTER PROCEDURE "public"."auth_login_as_user"(IN "user_email" "text") OWNER TO "postgres";
+
+--
+-- Name: auth_login_as_user_id("uuid"); Type: PROCEDURE; Schema: public; Owner: postgres
+--
+
+CREATE PROCEDURE "public"."auth_login_as_user_id"(IN "user_id" "uuid")
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+    auth_user auth.users;
+BEGIN
+    SELECT * INTO auth_user FROM auth.users WHERE id = user_id;
+    PERFORM set_config('request.jwt.claims', json_build_object(
+                'sub', (auth_user).id::text,
+                'role', (auth_user).ROLE,
+                'email', (auth_user).email,
+                'is_anonymous', (auth_user).is_anonymous,
+                'user_metadata', (auth_user).raw_user_meta_data,
+                'app_metadata', (auth_user).raw_app_meta_data
+            )::text, true);
+    PERFORM set_config('role', (auth_user).ROLE, true);
+    RAISE NOTICE '%', format( 'Set role %I and logging in as %L (%L)', (auth_user).ROLE, (auth_user).id, (auth_user).email);
+END;
+$$;
+
+ALTER PROCEDURE "public"."auth_login_as_user_id"(IN "user_id" "uuid") OWNER TO "postgres";
+
+--
+-- Name: auth_logout(); Type: PROCEDURE; Schema: public; Owner: postgres
+--
+
+CREATE PROCEDURE "public"."auth_logout"()
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+    PERFORM set_config('request.jwt.claims', null, true);
+    PERFORM set_config('role', 'postgres', true);
+END;
+$$;
+
+ALTER PROCEDURE "public"."auth_logout"() OWNER TO "postgres";
+
+--
 -- Name: create_metadata_for_new_user(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -202,8 +290,12 @@ CREATE TABLE IF NOT EXISTS "public"."user_metadata" (
     "user_id" "uuid" NOT NULL,
     "usage_count" integer DEFAULT 0 NOT NULL,
     "is_anonymous" boolean DEFAULT true NOT NULL,
-    CONSTRAINT "user_metadata_check" CHECK (("is_anonymous" AND ("usage_count" <= 10))),
-    CONSTRAINT "user_metadata_usage_count_check" CHECK (("usage_count" >= 0))
+    CONSTRAINT "user_metadata_usage_count_limits" CHECK (
+CASE
+    WHEN "is_anonymous" THEN ("usage_count" <= 10)
+    ELSE ("usage_count" <= 1000)
+END),
+    CONSTRAINT "user_metadata_usage_count_positive" CHECK (("usage_count" >= 0))
 );
 
 ALTER TABLE "public"."user_metadata" OWNER TO "postgres";
@@ -229,16 +321,16 @@ ALTER TABLE ONLY "public"."user_metadata"
 CREATE INDEX "submissions_user_id" ON "public"."submissions" USING "btree" ("user_id");
 
 --
--- Name: submissions submission_decrement; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: submissions submission_delete; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE OR REPLACE TRIGGER "submission_decrement" AFTER DELETE ON "public"."submissions" FOR EACH ROW EXECUTE FUNCTION "public"."decrement_submission_count"();
+CREATE OR REPLACE TRIGGER "submission_delete" AFTER DELETE ON "public"."submissions" FOR EACH ROW EXECUTE FUNCTION "public"."decrement_submission_count"();
 
 --
--- Name: submissions submission_increment; Type: TRIGGER; Schema: public; Owner: postgres
+-- Name: submissions submission_insert; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE OR REPLACE TRIGGER "submission_increment" AFTER INSERT ON "public"."submissions" FOR EACH ROW EXECUTE FUNCTION "public"."increment_submission_count"();
+CREATE OR REPLACE TRIGGER "submission_insert" AFTER INSERT ON "public"."submissions" FOR EACH ROW EXECUTE FUNCTION "public"."increment_submission_count"();
 
 --
 -- Name: submissions submissions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
@@ -816,6 +908,46 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 --
 
 -- GRANT ALL ON FUNCTION "pgsodium"."crypto_aead_det_keygen"() TO "service_role";
+
+--
+-- Name: PROCEDURE "auth_login_as_anon"(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON PROCEDURE "public"."auth_login_as_anon"() TO "anon";
+GRANT ALL ON PROCEDURE "public"."auth_login_as_anon"() TO "authenticated";
+GRANT ALL ON PROCEDURE "public"."auth_login_as_anon"() TO "service_role";
+
+--
+-- Name: PROCEDURE "auth_login_as_service_role"(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON PROCEDURE "public"."auth_login_as_service_role"() TO "anon";
+GRANT ALL ON PROCEDURE "public"."auth_login_as_service_role"() TO "authenticated";
+GRANT ALL ON PROCEDURE "public"."auth_login_as_service_role"() TO "service_role";
+
+--
+-- Name: PROCEDURE "auth_login_as_user"(IN "user_email" "text"); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON PROCEDURE "public"."auth_login_as_user"(IN "user_email" "text") TO "anon";
+GRANT ALL ON PROCEDURE "public"."auth_login_as_user"(IN "user_email" "text") TO "authenticated";
+GRANT ALL ON PROCEDURE "public"."auth_login_as_user"(IN "user_email" "text") TO "service_role";
+
+--
+-- Name: PROCEDURE "auth_login_as_user_id"(IN "user_id" "uuid"); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON PROCEDURE "public"."auth_login_as_user_id"(IN "user_id" "uuid") TO "anon";
+GRANT ALL ON PROCEDURE "public"."auth_login_as_user_id"(IN "user_id" "uuid") TO "authenticated";
+GRANT ALL ON PROCEDURE "public"."auth_login_as_user_id"(IN "user_id" "uuid") TO "service_role";
+
+--
+-- Name: PROCEDURE "auth_logout"(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON PROCEDURE "public"."auth_logout"() TO "anon";
+GRANT ALL ON PROCEDURE "public"."auth_logout"() TO "authenticated";
+GRANT ALL ON PROCEDURE "public"."auth_logout"() TO "service_role";
 
 --
 -- Name: FUNCTION "create_metadata_for_new_user"(); Type: ACL; Schema: public; Owner: postgres
