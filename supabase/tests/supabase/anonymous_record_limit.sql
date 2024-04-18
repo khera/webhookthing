@@ -29,7 +29,7 @@ CALL auth_login_as_user_id(:'anon_user_id');
 INSERT INTO submissions (user_id,body_raw) SELECT :'anon_user_id', g.id::TEXT FROM generate_series(1,:anon_record_limit) AS g(id);
 SELECT row_eq('anon_usage_counter', ROW(:anon_record_limit),'anon usage counter is maxed');
 SELECT row_eq('anon_submission_count', ROW((:anon_record_limit)::BIGINT),'anon submission count is maxed');
-SELECT throws_like('INSERT INTO submissions (user_id,body_raw) VALUES (''' || :'anon_user_id' || ''',''kaboom'')', '%violates check constraint "user_metadata_usage_count_check"%', 'anon insert over limit');
+SELECT throws_like('INSERT INTO submissions (user_id,body_raw) VALUES (''' || :'anon_user_id' || ''',''kaboom'')', '%violates check constraint "user_metadata_usage_count_limits"%', 'anon insert over limit');
 SELECT row_eq('anon_usage_counter', ROW(:anon_record_limit),'anon usage counter is still maxed');
 
 SELECT lives_ok('DELETE FROM submissions WHERE user_id = ''' || :'anon_user_id' || '''', 'delete own submissions to make room again');
@@ -45,9 +45,8 @@ CALL auth_login_as_user(:'user_login_email');
 INSERT INTO submissions (user_id,body_raw) SELECT :'user_id', g.id::TEXT FROM generate_series(1,:user_record_limit) AS g(id);
 SELECT row_eq('user_usage_counter', ROW(:user_record_limit),'user usage counter is maxed');
 SELECT row_eq('user_submission_count', ROW((:user_record_limit)::BIGINT),'user submission count is maxed');
---SELECT throws_like('INSERT INTO submissions (user_id,body_raw) VALUES (''' || :'user_id' || ''',''kaboom'')', '%violates check constraint "user_metadata_usage_count_check"%', 'anon insert over limit');
-SELECT lives_ok('INSERT INTO submissions (user_id,body_raw) VALUES (''' || :'user_id' || ''',''kaboom'')', 'user has no limit');
-SELECT row_eq('user_usage_counter', ROW(:user_record_limit + 1),'user usage counter is correct');
+SELECT throws_like('INSERT INTO submissions (user_id,body_raw) VALUES (''' || :'user_id' || ''',''kaboom'')', '%violates check constraint "user_metadata_usage_count_limits"%', 'anon insert over limit');
+SELECT row_eq('user_usage_counter', ROW(:user_record_limit),'user usage counter is still maxed');
 
 SELECT * FROM finish();
 ROLLBACK;

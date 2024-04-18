@@ -5,13 +5,13 @@ CREATE TABLE user_metadata (
 
     CONSTRAINT "user_metadata_usage_count_positive" CHECK (usage_count >= 0), -- never < 0
     -- limit use of anonymous users. regular users can have unlimited use
-    CONSTRAINT "user_metadata_usage_count_check" CHECK ((is_anonymous AND usage_count <= 10) OR NOT is_anonymous),
+    CONSTRAINT "user_metadata_usage_count_limits" CHECK (CASE WHEN is_anonymous THEN usage_count <= 10 ELSE usage_count <= 1000 END),
     PRIMARY KEY (user_id)
 );
 
 ALTER TABLE user_metadata ENABLE ROW LEVEL SECURITY;
 
--- only grant we need is to view; all insert/updates/delets are done by the system triggers
+-- only grant we need is to view; all insert/updates/deletes are done by the system triggers
 CREATE POLICY "view own metadata" ON user_metadata
     FOR SELECT TO authenticated USING ( auth.uid() = user_id );
 

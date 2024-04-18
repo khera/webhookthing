@@ -7,10 +7,9 @@ SELECT id FROM auth.users WHERE email = :'user_login_email' \gset user_
 
 \set anon_user_id '787981c8-040c-4085-8bda-7be6ac34ba42'
 
--- constraint limits the max number of records for anon users
+-- table constraint limits the max number of records
 \set anon_record_limit 10
--- there is not currently an enforced limit for regular users, but we use this in testing to make a bunch of records
-\set user_record_limit :anon_record_limit * 2
+\set user_record_limit 1000
 
 \if :{?test_name}
 -- nothing. cannot figure out how to negate a test. :shrug:
