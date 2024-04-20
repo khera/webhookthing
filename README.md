@@ -19,7 +19,7 @@ The following environment variables need to be set within your deployment enviro
 
 - `LOG_LEVEL` (string, default is unset; useful setting in dev mode is `debug`) makes the app server chatty to see what's going on.
 - `PERMIT_ANONYMOUS_USERS` (boolean, default false) allow the Supabase anonymous login feature.
-- `PUBLIC_URL` (string, default `http://localhost:5173/`) the base URL for where this is deployed
+- `PUBLIC_SITE_URL` (string, default `http://localhost:5173/`) the base URL for where this is deployed
 
 ## Running Locally in DEV Mode
 
@@ -44,4 +44,4 @@ Open the development url with your web browser: [http://localhost:5173/](http://
 
 Issue some GET and POST requests to the URL it shows you.
 
-If you installed the recommended modules into VS Code, you can open the file [rest_tests.rest](./rest_tests.rest) and submit the test samples there.
+If you installed the recommended modules into VS Code, you can open the file [rest_tests.rest](./__tests__/rest_tests.rest) and submit the test samples there.
