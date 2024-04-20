@@ -4,7 +4,7 @@
 \ir ./testing_constants.sql
 
 BEGIN;
-SELECT plan(29);
+SELECT plan(42);
 
 PREPARE anon_submission_count AS SELECT COUNT(*) FROM submissions WHERE user_id = :'anon_user_id';
 PREPARE anon_usage_counter AS SELECT usage_count FROM user_metadata WHERE user_id = :'anon_user_id';
@@ -61,12 +61,35 @@ SELECT row_eq('user_submission_count', ROW(1::BIGINT),'can see own submissions 2
 
 CALL auth_logout();
 
+-- test anon user
 CALL auth_login_as_user_id(:'anon_user_id');
 SELECT row_eq('user_submission_count', ROW(0::BIGINT),'cannot see other user records');
+SELECT is_empty('user_usage_counter', 'cannot see other user usage counter');
 
 SELECT lives_ok('INSERT INTO submissions (user_id,body_raw) VALUES (''' || :'anon_user_id' || ''',''bar'')', 'anon insert as self');
 SELECT row_eq('anon_submission_count', ROW(1::BIGINT),'anon can see own submissions');
-SELECT row_eq('anon_usage_counter', ROW(1),'anon usege counter is incremented');
+SELECT row_eq('anon_usage_counter', ROW(1),'anon usage counter is incremented');
+
+-- make sure service role can read and write to any user ID
+CALL auth_logout();
+
+CALL auth_login_as_service_role();
+SELECT row_eq('user_submission_count', ROW(1::BIGINT),'service role can see user record');
+SELECT row_eq('anon_submission_count', ROW(1::BIGINT),'service role can see anon record');
+
+SELECT lives_ok('INSERT INTO submissions (user_id,body_raw) VALUES (''' || :'anon_user_id' || ''',''service'')', 'service insert for anon');
+SELECT lives_ok('INSERT INTO submissions (user_id,body_raw) VALUES (''' || :'user_id' || ''',''service'')', 'service insert for user');
+SELECT throws_like('INSERT INTO submissions (user_id,body_raw) VALUES (gen_random_uuid(),''service'')', '%violates foreign key constraint "submissions_user_id_fkey"', 'service insert random ID should fail');
+
+SELECT row_eq('user_submission_count', ROW(2::BIGINT),'service role can see user record');
+SELECT row_eq('anon_submission_count', ROW(2::BIGINT),'service role can see anon record');
+SELECT row_eq('anon_usage_counter', ROW(2),'service can see anon usage counter');
+SELECT row_eq('user_usage_counter', ROW(2),'service can see user usage counter');
+
+SELECT lives_ok('DELETE FROM submissions WHERE user_id = ''' || :'user_id' || '''', 'service delete user submissions');
+SELECT row_eq('user_submission_count', ROW(0::BIGINT),'service deleted user submissions');
+SELECT row_eq('user_usage_counter', ROW(0),'user usage counter is decremented by service');
+
 
 SELECT * FROM finish();
 ROLLBACK;
