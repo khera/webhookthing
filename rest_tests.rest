@@ -1,0 +1,22 @@
+# use with REST Client in VS Code
+
+@host = http://localhost:5173/
+
+# this hook URL is for the demo test user
+@hooksite = {{host}}/h/a2dc5f10-5123-45ec-bf8c-1076c47681ff
+
+###
+# status
+###
+
+# @name status
+GET {{host}}/status
+
+###
+
+
+###
+# Simple GET
+###
+
+GET {{hooksite}}?param1=hello&param2=world
