@@ -30,11 +30,23 @@ CREATE TRIGGER create_profile_on_signup AFTER INSERT ON auth.users
 -- where we store the data
 --
 
+CREATE EXTENSION pg_hashids WITH SCHEMA extensions;
+
+-- Store the request data with some basic info pulled out into the table itself for convenience in searching
+-- SELECT id_encode(1028, '6c444d3a-d760-4111-81ce-801b6d9ca19a', 10) -> 'Wj2p12zNG6'
+-- SELECT id_decode('Wj2p12zNG6','6c444d3a-d760-4111-81ce-801b6d9ca19a',10) -> 1028
+
 CREATE TABLE submissions (
+    -- submission identifying information
     submission_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    public_id TEXT GENERATED ALWAYS AS (extensions.id_encode(submission_id,'6c444d3a-d760-4111-81ce-801b6d9ca19a',10)) STORED UNIQUE NOT NULL,  -- randomly generated UUID as salt
     user_id UUID NOT NULL REFERENCES user_metadata (user_id) ON DELETE CASCADE,
-    headers_raw TEXT,
+    -- request data
+    http_method TEXT NOT NULL DEFAULT 'GET',
+    query_string TEXT,
+    headers JSONB NOT NULL DEFAULT '{}',
     body_raw TEXT,
+    remote_ip INET NOT NULL DEFAULT '0.0.0.0',
     submission_time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -54,7 +66,7 @@ CREATE FUNCTION decrement_submission_count() RETURNS TRIGGER AS $$
     END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE TRIGGER submission_insert AFTER INSERT ON submissions
+CREATE TRIGGER submission_insert BEFORE INSERT ON submissions
     FOR EACH ROW EXECUTE FUNCTION increment_submission_count();
 
 CREATE TRIGGER submission_delete AFTER DELETE ON submissions
