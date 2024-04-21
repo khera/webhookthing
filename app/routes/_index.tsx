@@ -1,5 +1,7 @@
 import type { MetaFunction } from "@remix-run/node";
 
+import SignIn from './login';
+
 export const meta: MetaFunction = () => {
   return [
     { title: "New Remix App" },
@@ -36,6 +38,7 @@ export default function Index() {
           </a>
         </li>
       </ul>
+      <SignIn />
     </div>
   );
 }
