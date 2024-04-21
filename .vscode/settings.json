@@ -5,7 +5,7 @@
   "files.readonlyInclude": {
     "__design__/db_schema_diagram.mmd": true,
     "supabase/current_schema.sql": true,
-    "src/common/database.types.ts": true,
+    "app/lib/generated/*": true,
   },
   "yaml.schemas": {
     "https://json.schemastore.org/github-issue-config.json": ".github/ISSUE_TEMPLATE/config.yml"

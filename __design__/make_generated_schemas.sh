@@ -11,7 +11,7 @@
 # - jq (brew install jq)
 # - mermerd (download directly from https://github.com/KarnerTh/mermerd)
 
-if ! test -d src/common
+if ! test -d app/lib/generated
 then
    echo "run in project root directory"
    exit 1
