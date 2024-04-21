@@ -1,12 +1,12 @@
 # use with REST Client in VS Code
 
-@host = http://localhost:5173/
+@host = http://localhost:5173
 
 # this hook URL is for the demo test user
 @hooksite = {{host}}/h/a2dc5f10-5123-45ec-bf8c-1076c47681ff
 
 ###
-# status
+# server status
 ###
 
 # @name status
@@ -16,7 +16,43 @@ GET {{host}}/status
 
 
 ###
-# Simple GET
+# GET
 ###
 
-GET {{hooksite}}?param1=hello&param2=world
+# @name get_simple
+GET {{hooksite}}?param1=hello&param2=world+%26+friends
+
+###
+
+###
+# POST
+###
+
+# @name post_json
+POST {{hooksite}}
+Content-type: application/json
+
+{
+    "hello": "world"
+}
+
+###
+
+# @name post_plain
+POST {{hooksite}}?foo=bar
+Content-type: text/plain
+
+Hello, world & friends!
+
+###
+
+# @name post_form
+POST {{hooksite}}
+Content-type: application/x-www-form-urlencoded
+
+hello=world+%25+friends
+
+###
+
+# TBD: PUT, PATCH, DELETE
+

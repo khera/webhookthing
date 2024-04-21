@@ -28,10 +28,10 @@ cleanup()
 npx supabase status > /dev/null || exit 1
 
 # generate the typescript definitions for the database schema.
-npx supabase gen types typescript --local > src/common/database.types.ts
+npx supabase gen types typescript --local > app/lib/generated/database.types.ts
 
 # make a flattened compacted JSON version of the schema for the API documentation page
-##npx @redocly/cli bundle --dereferenced --ext json __design__/PublicAPI.yml | jq --compact-output . > src/app/integration-guide/api-spec/PublicAPI.json 
+npx @redocly/cli bundle --dereferenced --ext json __design__/PublicAPI.yml | jq --compact-output . > app/lib/generated/PublicAPI.json 
 
 mermerd -c postgresql://postgres:postgres@localhost:54322/postgres  -o __design__/db_schema_diagram.mmd --schema public --useAllTables
 

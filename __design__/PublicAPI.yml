@@ -1,0 +1,202 @@
+openapi: '3.0.3'
+
+info:
+  title: Web Hook Thing
+  version: "2024.04.21"
+  description: |
+    Test webhooks using HTTP GET/POST to the custom URL for your login.
+
+servers:
+  - url: "http://localhost:5173/"
+    description: Development Environment
+
+tags:
+  - name: Status
+    description: Server information / ping.
+  - name: WebHook
+    description: |
+      Web hooks. The USER_ID is unique to the logged in user.
+
+paths:
+  /status:
+    get:
+      summary: "Check if server is responding"
+      operationId: ping
+      tags:
+        - Status
+      description: |
+        Check to see if server is responding to any API requests. Returns the current release version number, current time, and configured server URL.
+      responses:
+        "200":
+          $ref: "#/components/responses/200SubmitHook"
+        "500":
+          $ref: "#/components/responses/500InternalError"
+
+  /h/{user_id}:
+    get:
+      summary: "WebHook GET method"
+      operationId: webhookGET
+      tags:
+        - WebHook
+      parameters:
+        - name: user_id
+          in: path
+          description: Personal user_id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUIDType"
+        - name: params
+          in: query
+          description: Optional parameters to pass to the hook, like `param1=value1&param2=value2`
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          $ref: "#/components/responses/200SubmitHook"
+        "400":
+          $ref: "#/components/responses/400GeneralError"
+        "401":
+          $ref: "#/components/responses/401Unauthenticated"
+        "403":
+          $ref: "#/components/responses/403Unauthorized"
+        "500":
+          $ref: "#/components/responses/500InternalError"
+    post:
+      summary: "WebHook POST method"
+      operationId: webhookPOST
+      tags:
+        - WebHook
+      parameters:
+        - name: user_id
+          in: path
+          description: Personal user_id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUIDType"
+        - name: params
+          in: query
+          description: Optional parameters to pass to the hook, like `param1=value1&param2=value2`
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          $ref: "#/components/responses/200SubmitHook"
+        "400":
+          $ref: "#/components/responses/400GeneralError"
+        "401":
+          $ref: "#/components/responses/401Unauthenticated"
+        "403":
+          $ref: "#/components/responses/403Unauthorized"
+        "500":
+          $ref: "#/components/responses/500InternalError"
+
+components:
+  schemas:
+    ## Common schema data types
+
+    UUIDType:
+      type: string
+      format: uuid
+      example: "b8cb8140-4fe5-43a6-e961-490fc3fccea8"
+      description: Unique identifier
+      title: UUID
+
+    ## Specific return types
+
+    ErrorDetail:
+      type: object
+      title: "Error Detail"
+      description: "String with description of what went wrong with the request."
+      properties:
+        error:
+          type: string
+          example: "Something went wrong."
+      required:
+        - detail
+
+    PingSuccess:
+      type: object
+      title: "Ping Success"
+      description: "Successful ping of server"
+      properties:
+        version:
+          type: string
+          description: semver version number
+          example: "1.0.0"
+        server_time:
+          type: string
+          description: current server time
+          example: "2024-04-20T20:37:44.223Z"
+        site_url:
+          type: string
+          description: current site url
+          example: "https://localhost:5173"
+      required:
+        - version
+        - server_time
+        - site_url
+
+    SubmitHookSuccess:
+      type: object
+      title: "Submit Hook Success"
+      description: "Successful submission of a hook"
+      properties:
+        success:
+          type: boolean
+          example: true
+      required:
+        - success
+
+  responses:
+    200PingOk:
+      description: Successful server status
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/PingSuccess"
+
+    200SubmitHook:
+      description: Successful submission of a hook
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SubmitHookSuccess"
+
+    204SuccessNoContent:
+      description: Response for successful request (no content returned)
+
+    400GeneralError:
+      description: "Bad Request."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorDetail"
+
+    401Unauthenticated:
+      description: "Missing or invalid authorization credentials."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorDetail"
+
+    403Unauthorized:
+      description: "Action is not permitted. Usually over quota"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorDetail"
+
+    404NotFound:
+      description: "The item was not found"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorDetail"
+
+    500InternalError:
+      description: "Internal server error. Try your request again later or contact support. This means something is broken."
+      content:
+        text/html:
+          example: <html lang="en"><head><title>Server Error (500)</title></head><body><h1>Server Error (500)</h1><p></p></body></html>

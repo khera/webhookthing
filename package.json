@@ -1,12 +1,12 @@
 {
   "name": "webhookthing",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "sideEffects": false,
   "type": "module",
   "scripts": {
     "build": "remix vite:build",
-    "dev": "remix vite:dev",
+    "dev": "remix vite:dev --host",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --verbose --runInBand",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "remix-serve ./build/server/index.js",
