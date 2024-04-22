@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from './generated/database.types';
 
 // make it easy to get the record types for a table. refer to the type as Tables<'TableName'>
-export type { Tables } from './generated/database.types';
+export type { Database, Tables } from './generated/database.types';
 
 export function createSupabaseServerClient(request: Request) {
   const cookies = parse(request.headers.get('Cookie') ?? '')
@@ -32,5 +32,5 @@ export function createSupabaseServerClient(request: Request) {
 }
 
 export function createSupabaseAdminClient() {
-    return { supabaseClient: createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!) }
+    return { supabaseAdminClient: createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!) }
 }
