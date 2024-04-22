@@ -4,6 +4,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  LiveReload,
   useLoaderData,
   useRevalidator,
 } from "@remix-run/react";
@@ -40,12 +41,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
         <ScrollRestoration />
         <Scripts />
+        <LiveReload />
       </body>
     </html>
   );
 }
 
 export default function App() {
+  // set up a Supabase browser client and stash it in the OutletContext for other pages to access it
   const { env, session } = useLoaderData<typeof loader>();
   const { revalidate } = useRevalidator();
 
