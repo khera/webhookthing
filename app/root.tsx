@@ -4,7 +4,6 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  LiveReload,
   useLoaderData,
   useRevalidator,
 } from "@remix-run/react";
@@ -14,18 +13,18 @@ import { json, type LoaderFunctionArgs } from "@remix-run/node";
 
 import { createSupabaseServerClient, type Database } from '~/lib/supabase.server';
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+export async function loader({ request }: LoaderFunctionArgs) {
   const env = {
     SUPABASE_URL: process.env.SUPABASE_URL!,
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
   };
 
-  const { supabaseClient, headers } = createSupabaseServerClient(request);
+  const { supabaseServerClient, headers } = createSupabaseServerClient(request);
 
-  const { data: { session } } = await supabaseClient.auth.getSession();
+  const { data: { session: serverSession } } = await supabaseServerClient.auth.getSession();
 
-  return json({ env, session, headers });
-};
+  return json({ env, serverSession, headers });
+}
 
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -41,7 +40,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );
@@ -49,12 +47,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   // set up a Supabase browser client and stash it in the OutletContext for other pages to access it
-  const { env, session } = useLoaderData<typeof loader>();
+  const { env, serverSession } = useLoaderData<typeof loader>();
   const { revalidate } = useRevalidator();
 
   const [supabase] = useState(() => createBrowserClient<Database>(env.SUPABASE_URL, env.SUPABASE_ANON_KEY));
 
-  const serverAccessToken = session?.access_token;
+  const serverAccessToken = serverSession?.access_token;
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -67,5 +65,5 @@ export default function App() {
     };
   }, [supabase, serverAccessToken, revalidate]);
 
-  return <Outlet context={{ supabase, session }} />;
+  return <Outlet context={{ supabase, serverSession }} />;
 }

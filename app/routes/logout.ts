@@ -5,11 +5,11 @@ import { createSupabaseServerClient } from '~/lib/supabase.server';
 import { logger } from '~/lib/logger';
 
 async function do_logout(request: Request) {
-    const { supabaseClient, headers } = createSupabaseServerClient(request);
+    const { supabaseServerClient, headers } = createSupabaseServerClient(request);
 
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { data: { session } } = await supabaseServerClient.auth.getSession();
     if (session) {
-        await supabaseClient.auth.signOut()
+        await supabaseServerClient.auth.signOut()
     }
 
     logger.debug(`logged out user ${session?.user.id}`);

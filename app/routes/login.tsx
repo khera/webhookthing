@@ -6,13 +6,13 @@ import { createSupabaseServerClient } from '~/lib/supabase.server';
 import { logger } from '~/lib/logger';
 
 export async function action ({ request }: ActionFunctionArgs) {
-    const { supabaseClient, headers } = createSupabaseServerClient(request);
+    const { supabaseServerClient, headers } = createSupabaseServerClient(request);
     const formData = await request.formData();
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     
     logger.debug(`logging in user ${email} password ${password}`);
-    const { error } = await supabaseClient.auth.signInWithPassword({
+    const { error } = await supabaseServerClient.auth.signInWithPassword({
         email,
         password
     });

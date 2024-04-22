@@ -24,7 +24,7 @@ GET {{host}}/status
 ###
 
 # @name get_simple
-GET {{hooksite}}?param1=hello&param2=world+%26+friends
+GET {{hooksite}}?param1=hello&param2=world+%26+friends&rand={{$randomInt 200 800}}
 X-Forwarded-For: 1.2.3.4
 
 ###
@@ -38,7 +38,8 @@ POST {{hooksite}}
 Content-type: application/json
 
 {
-    "hello": "world"
+    "hello": "world",
+    "randomness": {{$randomInt 20000 80000}}
 }
 
 ###

@@ -52,6 +52,9 @@ CREATE TABLE submissions (
 
 CREATE INDEX submissions_user_id ON submissions USING btree (user_id);
 
+-- enable realtime on this table
+ALTER PUBLICATION supabase_realtime ADD TABLE submissions;
+
 CREATE FUNCTION increment_submission_count() RETURNS TRIGGER AS $$
     BEGIN
         UPDATE user_metadata SET usage_count = usage_count + 1 WHERE user_id=NEW.user_id;

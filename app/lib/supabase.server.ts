@@ -12,7 +12,7 @@ export function createSupabaseServerClient(request: Request) {
   const cookies = parse(request.headers.get('Cookie') ?? '')
   const headers = new Headers()
 
-  const supabaseClient = createServerClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!,
+  const supabaseServerClient = createServerClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(key) {
@@ -28,7 +28,7 @@ export function createSupabaseServerClient(request: Request) {
     },
   );
 
-  return { supabaseClient, headers }
+  return { supabaseServerClient, headers }
 }
 
 export function createSupabaseAdminClient() {
