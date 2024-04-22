@@ -1,7 +1,11 @@
 erDiagram
     submissions {
         text body_raw 
-        text headers_raw 
+        jsonb headers 
+        text http_method 
+        text public_id UK 
+        text query_string 
+        inet remote_ip 
         integer submission_id PK 
         timestamp_with_time_zone submission_time 
         uuid user_id FK 

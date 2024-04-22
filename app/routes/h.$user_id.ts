@@ -6,8 +6,10 @@
 
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node"; // or cloudflare/deno
+import { getClientIPAddress } from "remix-utils/get-client-ip-address";
 
 import { logger } from "~/lib/logger";
+import { createSupabaseAdminClient } from "~/lib/supabase.server";
 
 /**
  * Gather the data from the HTTP submission and save it to the datbase
@@ -17,29 +19,56 @@ import { logger } from "~/lib/logger";
  * @returns 
  */
 async function parse_and_save (request: Request, params: LoaderFunctionArgs["params"]) {
-    const server_time = (new Date).toISOString();
-    const user_id = params.user_id;
+    const user_id : string = params.user_id!;
 
-    const method = request.method;
-    const raw_body = await request.text();
-    const mime_type = request.headers.get('Content-Type');
+    const { supabaseAdminClient } = createSupabaseAdminClient();
 
     const url = new URL(request.url);
 
-    logger.debug(`Submitting ${method} request for ${user_id} at ${server_time}`);
-    logger.debug(`raw query string`, url.searchParams.toString());
-    logger.debug(`header:`, request.headers);
-    logger.debug(`mime type:`, mime_type);
-    logger.debug(`raw body: "${raw_body}"`);
-
-    // iterate over searchParams keys and make a list of key/values
-    let query : string = '';
-    url.searchParams.forEach((value, key) => {
-        query += ` ${key}=${value}`;
+    const http_method : string = request.method;
+    const query_string : string = url.searchParams.toString();
+    // map the request headers to a JSON object
+    const header_items : string[] = [];
+    request.headers.forEach((value,key) => {
+        header_items.push( `${JSON.stringify(key)}: ${JSON.stringify(value)}`);
     });
-    logger.debug(`query:`, query);
+    const headers = JSON.parse('{' + header_items.join(',') + '}');
+    const body_raw : string = await request.text();
+    // picks from a proxy header. Returns null on local connections without proxy
+    const remote_ip : string | undefined = getClientIPAddress(request.headers) || undefined;
 
-    return json({ success: true }, 200);
+    logger.debug(`Submitting ${http_method} request for ${user_id}`);
+
+    const { data, error } = await supabaseAdminClient.from("submissions").insert({
+        user_id,
+        http_method,
+        query_string,
+        headers,
+        body_raw,
+        remote_ip
+    })
+    .select('submission_id')
+    .maybeSingle();
+
+    if (error) {
+        logger.debug(`submission error`, error);
+        // figure out what error to return
+        let status_code: number = 400;
+        let message: string = '';
+        if (error.message.match('violates foreign key constraint')) {
+            // unknown user
+            status_code = 401;
+            message = 'Unknown user';
+        } else if (error.message.match('violates check constraint "user_metadata_usage_count_limits"')) {
+            // too many records for this user
+            status_code = 403;
+            message = 'Too many records for this user';
+        }
+        return json({ error: message }, status_code); 
+    } else {
+        logger.debug(`submission_id`, data?.submission_id);
+        return json({ success: true }, 200);
+    }
 }
 
 // handle "GET" request

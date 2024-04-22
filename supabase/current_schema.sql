@@ -59,6 +59,18 @@ CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
 -- COMMENT ON EXTENSION "pg_graphql" IS 'pg_graphql: GraphQL support';
 
 --
+-- Name: pg_hashids; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS "pg_hashids" WITH SCHEMA "extensions";
+
+--
+-- Name: EXTENSION "pg_hashids"; Type: COMMENT; Schema: -; Owner: 
+--
+
+-- COMMENT ON EXTENSION "pg_hashids" IS 'pg_hashids';
+
+--
 -- Name: pg_stat_statements; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -261,9 +273,13 @@ SET default_table_access_method = "heap";
 
 CREATE TABLE IF NOT EXISTS "public"."submissions" (
     "submission_id" integer NOT NULL,
+    "public_id" "text" GENERATED ALWAYS AS ("extensions"."id_encode"(("submission_id")::bigint, '6c444d3a-d760-4111-81ce-801b6d9ca19a'::"text", 10)) STORED NOT NULL,
     "user_id" "uuid" NOT NULL,
-    "headers_raw" "text",
+    "http_method" "text" DEFAULT 'GET'::"text" NOT NULL,
+    "query_string" "text",
+    "headers" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
     "body_raw" "text",
+    "remote_ip" "inet" DEFAULT '0.0.0.0'::"inet" NOT NULL,
     "submission_time" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -308,6 +324,13 @@ ALTER TABLE ONLY "public"."submissions"
     ADD CONSTRAINT "submissions_pkey" PRIMARY KEY ("submission_id");
 
 --
+-- Name: submissions submissions_public_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."submissions"
+    ADD CONSTRAINT "submissions_public_id_key" UNIQUE ("public_id");
+
+--
 -- Name: user_metadata user_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -330,7 +353,7 @@ CREATE OR REPLACE TRIGGER "submission_delete" AFTER DELETE ON "public"."submissi
 -- Name: submissions submission_insert; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE OR REPLACE TRIGGER "submission_insert" AFTER INSERT ON "public"."submissions" FOR EACH ROW EXECUTE FUNCTION "public"."increment_submission_count"();
+CREATE OR REPLACE TRIGGER "submission_insert" BEFORE INSERT ON "public"."submissions" FOR EACH ROW EXECUTE FUNCTION "public"."increment_submission_count"();
 
 --
 -- Name: submissions submissions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
@@ -529,6 +552,30 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 -- GRANT ALL ON FUNCTION "extensions"."gen_salt"("text", integer) TO "dashboard_user";
 
 --
+-- Name: FUNCTION "hash_decode"("text", "text", integer); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."hash_decode"("text", "text", integer) TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "hash_encode"(bigint); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."hash_encode"(bigint) TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "hash_encode"(bigint, "text"); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."hash_encode"(bigint, "text") TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "hash_encode"(bigint, "text", integer); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."hash_encode"(bigint, "text", integer) TO "postgres" WITH GRANT OPTION;
+
+--
 -- Name: FUNCTION "hmac"("bytea", "bytea", "text"); Type: ACL; Schema: extensions; Owner: postgres
 --
 
@@ -543,6 +590,102 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 -- REVOKE ALL ON FUNCTION "extensions"."hmac"("text", "text", "text") FROM "postgres";
 -- GRANT ALL ON FUNCTION "extensions"."hmac"("text", "text", "text") TO "postgres" WITH GRANT OPTION;
 -- GRANT ALL ON FUNCTION "extensions"."hmac"("text", "text", "text") TO "dashboard_user";
+
+--
+-- Name: FUNCTION "id_decode"("text"); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_decode"("text") TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_decode"("text", "text"); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_decode"("text", "text") TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_decode"("text", "text", integer); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_decode"("text", "text", integer) TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_decode"("text", "text", integer, "text"); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_decode"("text", "text", integer, "text") TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_decode_once"("text"); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_decode_once"("text") TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_decode_once"("text", "text"); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_decode_once"("text", "text") TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_decode_once"("text", "text", integer); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_decode_once"("text", "text", integer) TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_decode_once"("text", "text", integer, "text"); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_decode_once"("text", "text", integer, "text") TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_encode"(bigint[]); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_encode"(bigint[]) TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_encode"(bigint); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_encode"(bigint) TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_encode"(bigint[], "text"); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_encode"(bigint[], "text") TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_encode"(bigint, "text"); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_encode"(bigint, "text") TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_encode"(bigint[], "text", integer); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_encode"(bigint[], "text", integer) TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_encode"(bigint, "text", integer); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_encode"(bigint, "text", integer) TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_encode"(bigint[], "text", integer, "text"); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_encode"(bigint[], "text", integer, "text") TO "postgres" WITH GRANT OPTION;
+
+--
+-- Name: FUNCTION "id_encode"(bigint, "text", integer, "text"); Type: ACL; Schema: extensions; Owner: supabase_admin
+--
+
+-- GRANT ALL ON FUNCTION "extensions"."id_encode"(bigint, "text", integer, "text") TO "postgres" WITH GRANT OPTION;
 
 --
 -- Name: FUNCTION "pg_stat_statements"("showtext" boolean, OUT "userid" "oid", OUT "dbid" "oid", OUT "toplevel" boolean, OUT "queryid" bigint, OUT "query" "text", OUT "plans" bigint, OUT "total_plan_time" double precision, OUT "min_plan_time" double precision, OUT "max_plan_time" double precision, OUT "mean_plan_time" double precision, OUT "stddev_plan_time" double precision, OUT "calls" bigint, OUT "total_exec_time" double precision, OUT "min_exec_time" double precision, OUT "max_exec_time" double precision, OUT "mean_exec_time" double precision, OUT "stddev_exec_time" double precision, OUT "rows" bigint, OUT "shared_blks_hit" bigint, OUT "shared_blks_read" bigint, OUT "shared_blks_dirtied" bigint, OUT "shared_blks_written" bigint, OUT "local_blks_hit" bigint, OUT "local_blks_read" bigint, OUT "local_blks_dirtied" bigint, OUT "local_blks_written" bigint, OUT "temp_blks_read" bigint, OUT "temp_blks_written" bigint, OUT "blk_read_time" double precision, OUT "blk_write_time" double precision, OUT "temp_blk_read_time" double precision, OUT "temp_blk_write_time" double precision, OUT "wal_records" bigint, OUT "wal_fpi" bigint, OUT "wal_bytes" numeric, OUT "jit_functions" bigint, OUT "jit_generation_time" double precision, OUT "jit_inlining_count" bigint, OUT "jit_inlining_time" double precision, OUT "jit_optimization_count" bigint, OUT "jit_optimization_time" double precision, OUT "jit_emission_count" bigint, OUT "jit_emission_time" double precision); Type: ACL; Schema: extensions; Owner: supabase_admin

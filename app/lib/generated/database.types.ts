@@ -37,21 +37,33 @@ export type Database = {
       submissions: {
         Row: {
           body_raw: string | null
-          headers_raw: string | null
+          headers: Json
+          http_method: string
+          public_id: string
+          query_string: string | null
+          remote_ip: unknown
           submission_id: number
           submission_time: string
           user_id: string
         }
         Insert: {
           body_raw?: string | null
-          headers_raw?: string | null
+          headers?: Json
+          http_method?: string
+          public_id?: string
+          query_string?: string | null
+          remote_ip?: unknown
           submission_id?: never
           submission_time?: string
           user_id: string
         }
         Update: {
           body_raw?: string | null
-          headers_raw?: string | null
+          headers?: Json
+          http_method?: string
+          public_id?: string
+          query_string?: string | null
+          remote_ip?: unknown
           submission_id?: never
           submission_time?: string
           user_id?: string

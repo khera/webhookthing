@@ -3,7 +3,11 @@
 @host = http://localhost:5173
 
 # this hook URL is for the demo test user
-@hooksite = {{host}}/h/a2dc5f10-5123-45ec-bf8c-1076c47681ff
+@user_id = a2dc5f10-5123-45ec-bf8c-1076c47681ff
+@username = user@spammerdomain.com
+@password = nebula-aid-harry
+
+@hooksite = {{host}}/h/{{user_id}}
 
 ###
 # server status
@@ -21,6 +25,7 @@ GET {{host}}/status
 
 # @name get_simple
 GET {{hooksite}}?param1=hello&param2=world+%26+friends
+X-Forwarded-For: 1.2.3.4
 
 ###
 
@@ -54,5 +59,18 @@ hello=world+%25+friends
 
 ###
 
-# TBD: PUT, PATCH, DELETE
+# @name manual_login
+# cookies are kept in $HOME/.rest-client/cookies.json
+POST {{host}}/login
+Content-type: application/x-www-form-urlencoded
 
+email={{username}}&password={{password}}
+
+###
+
+# if logout is called with GET, it does immediate redirect and load of home page, which is ugly
+# in this test script.
+# @name manual_logout
+POST {{host}}/logout
+
+###
