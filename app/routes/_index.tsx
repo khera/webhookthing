@@ -24,15 +24,16 @@ export default function Index() {
 
   useEffect(() => {
       async function fetchList() {
-        console.log(`pre fetch`);
+        console.debug(`pre fetch`);
         if (!browserSession) {
-          console.log(`fetching browser session`);
+          console.debug(`fetching browser session`);
           const { data: { session } } = await supabase.auth.getSession();
           if (session) {
+            console.debug(`got session! ${session.user.id}`);
             setBrowserSession(session);
           }
         } else {
-          console.log(`fetching list`)
+          console.debug(`fetching list`)
           const { data, error } = await supabase.from('submissions').select().eq('user_id',browserSession.user.id).order('submission_time', {ascending: false});
           if (error) {
             console.error(error);
@@ -44,27 +45,28 @@ export default function Index() {
       }
 
       fetchList();
-  }, [supabase, isLoaded, serverSession, setSubmissionList, setIsLoaded, browserSession, setBrowserSession]);
+  }, [supabase, isLoaded, serverSession?.user.id, setSubmissionList, setIsLoaded, browserSession, setBrowserSession]);
 
-  // TBD: on initial login, the realtime is not picking up changes
   useEffect(() => {
-    console.log(`realtime setup`);
+    console.debug(`realtime setup`);
     if (!browserSession) return;
 
+    // the session in the `supabase` client doesn't get updated by server-side login
+    supabase.auth.setSession(browserSession);
     const channel = supabase
-      .channel('submissions')
+      .channel('*')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'submissions' }, (payload) => {
         setSubmissionList((current: Submission[]) => ([payload.new as Submission, ...current]))
       })
       .subscribe()
 
-    console.log(`waiting for data! ${browserSession?.user.id}`);
+    console.debug(`waiting for data! ${browserSession?.user.id}`);
     return () => {
       supabase.removeChannel(channel)
     }
   }, [supabase, browserSession, setSubmissionList, submissionList])
 
-  if (serverSession && !isLoaded) {
+  if (browserSession && !isLoaded) {
     return (<p>Loading...</p>);
   }
 
