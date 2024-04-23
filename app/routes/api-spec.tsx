@@ -1,20 +1,20 @@
-// currently broken :( needs to run on client perhaps.
+// currently broken :(
 
 /**
-import { RedocStandalone } from 'redoc';
+import { ApiReferenceReact } from '@scalar/api-reference-react'
 import apiSpec from '~/lib/generated/PublicAPI.json';
 
-export default function App() {
+export default function ApiSpec() {
   return (
-    <RedocStandalone
-        spec={apiSpec}
-        options = {{
-          hideDownloadButton: true,
-          pathInMiddlePanel: true,
-          enumSkipQuotes: true,
-          showSecuritySchemeType: true,
+    <>
+      <ApiReferenceReact
+        configuration={{
+          spec: {
+            content: {apiSpec}
+          },
         }}
       />
-  )
+    </>
+  );
 }
 */
