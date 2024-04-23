@@ -51,7 +51,7 @@ async function parse_and_save (request: Request, params: LoaderFunctionArgs["par
     .maybeSingle();
 
     if (error) {
-        logger.debug(`submission error`, error);
+        logger.debug(`submission error =`, error);
         // figure out what error to return
         let status_code: number = 400;
         let message: string = '';
@@ -63,6 +63,7 @@ async function parse_and_save (request: Request, params: LoaderFunctionArgs["par
             // too many records for this user
             status_code = 403;
             message = 'Too many records for this user';
+            logger.warn(`User ${user_id} is over quota.`);
         }
         return json({ error: message }, status_code); 
     } else {

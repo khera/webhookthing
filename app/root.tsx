@@ -9,14 +9,17 @@ import {
 } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { createBrowserClient } from '@supabase/ssr';
+import type { Session } from '@supabase/supabase-js';
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
 
 import { createSupabaseServerClient, type Database } from '~/lib/supabase.server';
+import type { OutletContext } from "~/lib/types";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const env = {
     SUPABASE_URL: process.env.SUPABASE_URL!,
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
+    ALLOW_ANON: process.env.PERMIT_ANONYMOUS_USERS === 'true' ? true : false,
   };
 
   const { supabaseServerClient, headers } = createSupabaseServerClient(request);
@@ -59,11 +62,19 @@ export default function App() {
       if (session?.access_token !== serverAccessToken) {
         revalidate();
       }
+
+      if (event === 'INITIAL_SESSION' && serverSession) {
+        // the session in the `supabase` client doesn't get updated by server-side login
+        // on the initial login, so we need to manually set it here.
+        //console.debug(`setting session ${serverSession?.access_token}`);
+        supabase.auth.setSession(serverSession as Session); // it comes as JsonifyObject<Session>
+      } 
+
     });
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, serverAccessToken, revalidate]);
+  }, [supabase, serverAccessToken, revalidate, serverSession]);
 
-  return <Outlet context={{ supabase, serverSession }} />;
+  return <Outlet context={{ supabase, serverSession, allowAnonymous: env.ALLOW_ANON } as OutletContext} />;
 }

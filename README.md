@@ -18,7 +18,7 @@ There is no signup form because it is intended as a personal use app. To create 
 The following environment variables need to be set within your deployment environment or locally for dev mode (via the `.env` file):
 
 - `LOG_LEVEL` (string, default is unset; useful setting in dev mode is `debug`) makes the app server chatty to see what's going on.
-- `PERMIT_ANONYMOUS_USERS` (boolean, default false) allow the Supabase anonymous login feature.
+- `PERMIT_ANONYMOUS_USERS` (boolean, default false) allow the Supabase anonymous login feature. Must enable in Supabase also (cloud: via dashboard, local: via [config file](./supabase/config.toml) `auth.enable_anonymous_sign_ins` setting)
 - `PUBLIC_SITE_URL` (string, default `http://localhost:5173/`) the base URL for where this is deployed
 
 ## Running Locally in DEV Mode

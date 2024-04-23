@@ -1,10 +1,11 @@
 import type { MetaFunction } from "@remix-run/node";
-import { useOutletContext } from "@remix-run/react";
+import { useOutletContext, useLoaderData } from "@remix-run/react";
 import type { OutletContext } from "~/lib/types";
 import { useEffect, useState } from "react";
 
 import SignIn from './login';
 import type { Tables } from "~/lib/supabase.server";
+import { siteURL } from "~/lib/siteURL";
 
 type Submission = Tables<'submissions'>;
 
@@ -15,16 +16,21 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export async function loader() {
+  return { siteURL: siteURL() };
+}
+
 export default function Index() {
   const { supabase, serverSession } = useOutletContext<OutletContext>();
+  const { siteURL } = useLoaderData<typeof loader>();
   const [submissionList, setSubmissionList] = useState<Submission[]>([]);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
   useEffect(() => {
-      console.debug(`pre fetch`);
+      //console.debug(`pre fetch`);
       async function fetchList() {
         if (serverSession) {
-          console.debug(`fetching list`)
+          //console.debug(`fetching list`)
           const { data, error } = await supabase.from('submissions').select().eq('user_id',serverSession.user.id).order('submission_time', {ascending: false});
           if (error) {
             console.error(error);
@@ -39,11 +45,9 @@ export default function Index() {
   }, [supabase, isLoaded, serverSession, setSubmissionList, setIsLoaded]);
 
   useEffect(() => {
-    console.debug(`realtime setup`);
+    //console.debug(`realtime setup`);
     if (!serverSession) return;
 
-    // the session in the `supabase` client doesn't get updated by server-side login
-    supabase.auth.setSession(serverSession);
     const channel = supabase
       .channel('*')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'submissions' }, (payload) => {
@@ -51,7 +55,7 @@ export default function Index() {
       })
       .subscribe()
 
-    console.debug(`waiting for data! ${serverSession.user.id}`);
+    //console.debug(`waiting for data! ${serverSession.user.id}`);
     return () => {
       supabase.removeChannel(channel)
     }
@@ -66,11 +70,11 @@ export default function Index() {
       <h1>Web Hook Thing</h1>
       {serverSession?.user.id ? 
     (<>
-      <p>Logged in {serverSession?.user.id} <a href="/logout">Sign Out</a></p>
-      <p>Submission List</p>
+      <p>Logged in as {serverSession?.user.is_anonymous ? 'anon' : 'real'} user. Submit hooks to: <pre>{siteURL + serverSession?.user.id}</pre> <a href="/logout">Sign Out</a></p><hr />
+      <h2>Submission List</h2>
       {
         submissionList.map((item) => {
-          return (<pre key={item.submission_id}>{JSON.stringify(item)}</pre>)
+          return (<pre key={item.submission_id}>{JSON.stringify(item,null,2)}</pre>)
         })
       }
      </>

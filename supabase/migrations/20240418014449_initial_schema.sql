@@ -8,12 +8,13 @@ CREATE TABLE user_metadata (
     CONSTRAINT "user_metadata_usage_count_limits" CHECK (CASE WHEN is_anonymous THEN usage_count <= 10 ELSE usage_count <= 1000 END),
     PRIMARY KEY (user_id)
 );
+COMMENT ON TABLE user_metadata IS 'Tracks and enforces usage count of submissions';
 
 ALTER TABLE user_metadata ENABLE ROW LEVEL SECURITY;
 
 -- only grant we need is to view; all insert/updates/deletes are done by the system triggers
 CREATE POLICY "view own metadata" ON user_metadata
-    FOR SELECT TO authenticated USING ( auth.uid() = user_id );
+    FOR SELECT TO authenticated USING ( (SELECT auth.uid()) = user_id );
 
 CREATE FUNCTION create_metadata_for_new_user() RETURNS TRIGGER AS
     $$
@@ -21,7 +22,7 @@ CREATE FUNCTION create_metadata_for_new_user() RETURNS TRIGGER AS
         INSERT INTO user_metadata (user_id, is_anonymous) VALUES (NEW.id, NEW.is_anonymous);
         RETURN NEW;
     END;
-    $$ LANGUAGE plpgsql SECURITY DEFINER;
+    $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 CREATE TRIGGER create_profile_on_signup AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION create_metadata_for_new_user();
@@ -49,6 +50,7 @@ CREATE TABLE submissions (
     remote_ip INET NOT NULL DEFAULT '0.0.0.0',
     submission_time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+COMMENT ON TABLE submissions IS 'Web hook submissions data';
 
 CREATE INDEX submissions_user_id ON submissions USING btree (user_id);
 
@@ -60,14 +62,14 @@ CREATE FUNCTION increment_submission_count() RETURNS TRIGGER AS $$
         UPDATE user_metadata SET usage_count = usage_count + 1 WHERE user_id=NEW.user_id;
         RETURN NEW;
     END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 CREATE FUNCTION decrement_submission_count() RETURNS TRIGGER AS $$
     BEGIN
         UPDATE user_metadata SET usage_count = usage_count - 1 WHERE user_id=OLD.user_id;
         RETURN NULL;
     END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 CREATE TRIGGER submission_insert BEFORE INSERT ON submissions
     FOR EACH ROW EXECUTE FUNCTION increment_submission_count();
@@ -81,13 +83,13 @@ CREATE POLICY
   "view own data"
   ON submissions
   FOR SELECT TO authenticated
-  USING ( auth.uid() = user_id );
+  USING ( (SELECT auth.uid()) = user_id );
 
 CREATE POLICY
   "delete own data"
   ON submissions
   FOR DELETE TO authenticated
-  USING ( auth.uid() = user_id );
+  USING ( (SELECT auth.uid()) = user_id );
 
 CREATE POLICY
   "insert own data"
