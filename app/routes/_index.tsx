@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 
 import SignIn from './login';
 import type { Tables } from "~/lib/supabase.server";
-import type { Session } from "@supabase/supabase-js";
 
 type Submission = Tables<'submissions'>;
 
@@ -20,21 +19,13 @@ export default function Index() {
   const { supabase, serverSession } = useOutletContext<OutletContext>();
   const [submissionList, setSubmissionList] = useState<Submission[]>([]);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
-  const [browserSession, setBrowserSession] = useState<Session | undefined>();
 
   useEffect(() => {
+      console.debug(`pre fetch`);
       async function fetchList() {
-        console.debug(`pre fetch`);
-        if (!browserSession) {
-          console.debug(`fetching browser session`);
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            console.debug(`got session! ${session.user.id}`);
-            setBrowserSession(session);
-          }
-        } else {
+        if (serverSession) {
           console.debug(`fetching list`)
-          const { data, error } = await supabase.from('submissions').select().eq('user_id',browserSession.user.id).order('submission_time', {ascending: false});
+          const { data, error } = await supabase.from('submissions').select().eq('user_id',serverSession.user.id).order('submission_time', {ascending: false});
           if (error) {
             console.error(error);
           } else {
@@ -45,14 +36,14 @@ export default function Index() {
       }
 
       fetchList();
-  }, [supabase, isLoaded, serverSession?.user.id, setSubmissionList, setIsLoaded, browserSession, setBrowserSession]);
+  }, [supabase, isLoaded, serverSession, setSubmissionList, setIsLoaded]);
 
   useEffect(() => {
     console.debug(`realtime setup`);
-    if (!browserSession) return;
+    if (!serverSession) return;
 
     // the session in the `supabase` client doesn't get updated by server-side login
-    supabase.auth.setSession(browserSession);
+    supabase.auth.setSession(serverSession);
     const channel = supabase
       .channel('*')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'submissions' }, (payload) => {
@@ -60,13 +51,13 @@ export default function Index() {
       })
       .subscribe()
 
-    console.debug(`waiting for data! ${browserSession?.user.id}`);
+    console.debug(`waiting for data! ${serverSession.user.id}`);
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [supabase, browserSession, setSubmissionList, submissionList])
+  }, [supabase, serverSession, setSubmissionList, submissionList])
 
-  if (browserSession && !isLoaded) {
+  if (serverSession && !isLoaded) {
     return (<p>Loading...</p>);
   }
 
