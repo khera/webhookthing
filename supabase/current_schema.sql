@@ -224,6 +224,7 @@ ALTER PROCEDURE "public"."auth_logout"() OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."create_metadata_for_new_user"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
     BEGIN
         INSERT INTO user_metadata (user_id, is_anonymous) VALUES (NEW.id, NEW.is_anonymous);
@@ -239,6 +240,7 @@ ALTER FUNCTION "public"."create_metadata_for_new_user"() OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."decrement_submission_count"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
     BEGIN
         UPDATE user_metadata SET usage_count = usage_count - 1 WHERE user_id=OLD.user_id;
@@ -254,6 +256,7 @@ ALTER FUNCTION "public"."decrement_submission_count"() OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."increment_submission_count"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
     BEGIN
         UPDATE user_metadata SET usage_count = usage_count + 1 WHERE user_id=NEW.user_id;
@@ -286,6 +289,12 @@ CREATE TABLE IF NOT EXISTS "public"."submissions" (
 ALTER TABLE "public"."submissions" OWNER TO "postgres";
 
 --
+-- Name: TABLE "submissions"; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE "public"."submissions" IS 'Web hook submissions data';
+
+--
 -- Name: submissions_submission_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -315,6 +324,12 @@ END),
 );
 
 ALTER TABLE "public"."user_metadata" OWNER TO "postgres";
+
+--
+-- Name: TABLE "user_metadata"; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE "public"."user_metadata" IS 'Tracks and enforces usage count of submissions';
 
 --
 -- Name: submissions submissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
@@ -373,7 +388,7 @@ ALTER TABLE ONLY "public"."user_metadata"
 -- Name: submissions delete own data; Type: POLICY; Schema: public; Owner: postgres
 --
 
-CREATE POLICY "delete own data" ON "public"."submissions" FOR DELETE TO "authenticated" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "delete own data" ON "public"."submissions" FOR DELETE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 --
 -- Name: submissions insert own data; Type: POLICY; Schema: public; Owner: postgres
@@ -397,13 +412,13 @@ ALTER TABLE "public"."user_metadata" ENABLE ROW LEVEL SECURITY;
 -- Name: submissions view own data; Type: POLICY; Schema: public; Owner: postgres
 --
 
-CREATE POLICY "view own data" ON "public"."submissions" FOR SELECT TO "authenticated" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "view own data" ON "public"."submissions" FOR SELECT TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 --
 -- Name: user_metadata view own metadata; Type: POLICY; Schema: public; Owner: postgres
 --
 
-CREATE POLICY "view own metadata" ON "public"."user_metadata" FOR SELECT TO "authenticated" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "view own metadata" ON "public"."user_metadata" FOR SELECT TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 --
 -- Name: supabase_realtime; Type: PUBLICATION; Schema: -; Owner: postgres
@@ -412,6 +427,12 @@ CREATE POLICY "view own metadata" ON "public"."user_metadata" FOR SELECT TO "aut
 -- CREATE PUBLICATION "supabase_realtime" WITH (publish = 'insert, update, delete, truncate');
 
 ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
+
+--
+-- Name: supabase_realtime submissions; Type: PUBLICATION TABLE; Schema: public; Owner: postgres
+--
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."submissions";
 
 --
 -- Name: SCHEMA "net"; Type: ACL; Schema: -; Owner: supabase_admin
