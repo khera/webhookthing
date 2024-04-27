@@ -18,7 +18,7 @@ import { createSupabaseAdminClient } from "~/lib/supabase.server";
  * @param params The params object parsed from the Remix URL
  * @returns 
  */
-async function parse_and_save (request: Request, params: LoaderFunctionArgs["params"]) {
+async function parse_and_save (request: LoaderFunctionArgs["request"], params: LoaderFunctionArgs["params"]) {
     const user_id : string = params.user_id!;
 
     const { supabaseAdminClient } = createSupabaseAdminClient();

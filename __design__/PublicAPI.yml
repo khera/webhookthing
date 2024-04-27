@@ -7,7 +7,7 @@ info:
     Test webhooks using HTTP GET/POST to the custom URL for your login.
 
 servers:
-  - url: "http://localhost:5173/"
+  - url: "http://localhost:5173"
     description: Development Environment
 
 tags:
@@ -99,7 +99,8 @@ components:
     UUIDType:
       type: string
       format: uuid
-      example: "b8cb8140-4fe5-43a6-e961-490fc3fccea8"
+      # this example URL is for the testing user, so it is easy to use the API testing tool on the spec page
+      example: "a2dc5f10-5123-45ec-bf8c-1076c47681ff"
       description: Unique identifier
       title: UUID
 

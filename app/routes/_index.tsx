@@ -70,11 +70,16 @@ export default function Index() {
       <h1>Web Hook Thing</h1>
       {serverSession?.user.id ? 
     (<>
-      <p>Logged in as {serverSession?.user.is_anonymous ? 'anon' : 'real'} user. Submit hooks to: <pre>{siteURL + serverSession?.user.id}</pre> <a href="/logout">Sign Out</a></p><hr />
+      <p>
+        Logged in as {serverSession?.user.is_anonymous ? 'anon' : 'real'} user. Submit hooks to: <pre>{siteURL + serverSession?.user.id}</pre>
+        <a href="/logout">Sign Out</a>
+        <br />
+        <a href="/api-spec">API Specification</a>
+      </p><hr />
       <h2>Submission List</h2>
       {
         submissionList.map((item) => {
-          return (<pre key={item.submission_id}>{JSON.stringify(item,null,2)}</pre>)
+          return (<><pre key={item.submission_id}>{JSON.stringify(item,null,2)}</pre><hr /></>)
         })
       }
      </>

@@ -1,6 +1,3 @@
-// currently broken :(
-
-/**
 import { ApiReferenceReact } from '@scalar/api-reference-react'
 import apiSpec from '~/lib/generated/PublicAPI.json';
 
@@ -10,11 +7,11 @@ export default function ApiSpec() {
       <ApiReferenceReact
         configuration={{
           spec: {
-            content: {apiSpec}
+            content: apiSpec
           },
+          theme: 'purple',  // everything is better when it is purple.
         }}
       />
     </>
   );
 }
-*/
