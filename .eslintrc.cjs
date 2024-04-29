@@ -28,7 +28,7 @@ module.exports = {
     // React
     {
       files: ["**/*.{js,jsx,ts,tsx}"],
-      plugins: ["react", "jsx-a11y"],
+      plugins: ["import", "react", "react-hooks", "jsx-a11y"],
       extends: [
         "plugin:react/recommended",
         "plugin:react/jsx-runtime",

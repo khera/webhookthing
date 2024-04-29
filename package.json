@@ -7,7 +7,7 @@
   "scripts": {
     "build": "remix vite:build",
     "dev": "remix vite:dev --host",
-    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --verbose --runInBand",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --verbose",
     "testdb": "supabase test db",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "remix-serve ./build/server/index.js",
