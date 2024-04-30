@@ -3,6 +3,8 @@ import { useOutletContext, useLoaderData } from "@remix-run/react";
 import type { OutletContext } from "~/lib/types";
 import { useEffect, useState } from "react";
 
+import {Typography, LinearProgress, Box, Button, Link} from '@mui/material';
+
 import SignIn from './login';
 import type { Tables } from "~/lib/supabase.server";
 import { siteURL } from "~/lib/siteURL";
@@ -62,24 +64,23 @@ export default function Index() {
   }, [supabase, serverSession, setSubmissionList, submissionList])
 
   if (serverSession && !isLoaded) {
-    return (<p>Loading...</p>);
+    return (<Box sx={{ width: '100%' }}><LinearProgress /></Box>);
   }
 
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
-      <h1>Web Hook Thing</h1>
+      <Typography variant="h1">Web Hook Thing</Typography>
       {serverSession?.user.id ? 
     (<>
-      <p>
-        Logged in as {serverSession?.user.is_anonymous ? 'anon' : 'real'} user. Submit hooks to: <pre>{siteURL + serverSession?.user.id}</pre>
-        <a href="/logout">Sign Out</a>
-        <br />
-        <a href="/api-spec">API Specification</a>
-      </p><hr />
-      <h2>Submission List</h2>
+      <Typography variant="body2">
+        Logged in as {serverSession?.user.is_anonymous ? 'anon' : 'real'} user. Submit hooks to: <Link href={siteURL + 'h/' + serverSession?.user.id}>{siteURL + 'h/' + serverSession?.user.id}</Link>
+        <Button href="/logout">Sign Out</Button>
+        <Button variant="contained" href="/api-spec">API Specification</Button>
+      </Typography><hr />
+      <Typography variant="h2" color="secondary.main">Submission List</Typography>
       {
         submissionList.map((item) => {
-          return (<><pre key={item.submission_id}>{JSON.stringify(item,null,2)}</pre><hr /></>)
+          return (<><Box key={item.public_id}>{JSON.stringify(item,null,2)}</Box><hr /></>)
         })
       }
      </>

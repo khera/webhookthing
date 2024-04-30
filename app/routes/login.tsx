@@ -6,6 +6,8 @@ import { createSupabaseServerClient } from '~/lib/supabase.server';
 import { logger } from '~/lib/logger';
 import type { OutletContext } from "~/lib/types";
 
+import { Typography, TextField, Box, Button, Container } from '@mui/material';
+
 export async function action ({ request }: ActionFunctionArgs) {
     const { supabaseServerClient, headers } = createSupabaseServerClient(request);
     const formData = await request.formData();
@@ -29,8 +31,9 @@ export async function action ({ request }: ActionFunctionArgs) {
 function AnonLoginForm() {
     return (
         <Form method="post" action="/loginanon">
-            <button type="submit">Sign In Anonymously</button>
+            <Button type="submit">Sign In Anonymously</Button>
         </Form>
+        
     );
 }
 
@@ -40,17 +43,43 @@ const SignIn = () => {
     const actionResponse = useActionData<typeof action>();
     
     return (
-        <>
-            <h1>Sign In</h1>
-            {actionResponse?.error ? (<p>{actionResponse.error}, please try again.</p>) : (<></>)}
-            <Form method="post" action="/login">
-                <input type="email" name="email" placeholder="Your Email" required />
-                <input type="password" name="password" placeholder="Your Password" required />
-                <br />
-                <button type="submit">Sign In</button>
-            </Form>
-            {allowAnonymous ? <AnonLoginForm /> : null}
-        </>
+        <Container component="main" maxWidth="xs">
+            <Typography variant="h2">Sign In</Typography>
+
+            <Box
+                sx={{
+                    marginTop: 8,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                }}
+            >
+
+                {actionResponse?.error ? (<Typography color="error.main">{actionResponse.error}, please try again.</Typography>) : (<></>)}
+                
+                <Form method="post" action="/login">
+                    <TextField
+                        margin="normal"
+                        required
+                        id="email"
+                        label="Email Address"
+                        name="email"
+                        autoComplete="email"
+                    />
+                    <TextField
+                        margin="normal"
+                        required
+                        name="password"
+                        label="Password"
+                        type="password"
+                        id="password"
+                        autoComplete="current-password"
+                    />
+                    <Button variant="contained" type="submit">Sign In</Button>
+                </Form>
+                {allowAnonymous ? <AnonLoginForm /> : null}
+            </Box>
+        </Container>
     );
 }
 export default SignIn;

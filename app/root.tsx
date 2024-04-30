@@ -15,6 +15,10 @@ import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { createSupabaseServerClient, type Database } from '~/lib/supabase.server';
 import type { OutletContext } from "~/lib/types";
 
+import theme from '~/theme';
+import { ThemeProvider } from '@mui/material/styles';
+import { CssBaseline } from '@mui/material';
+
 export async function loader({ request }: LoaderFunctionArgs) {
   const env = {
     SUPABASE_URL: process.env.SUPABASE_URL!,
@@ -36,13 +40,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content={theme.palette.primary.main} />
+        <meta name="emotion-insertion-point" content="emotion-insertion-point" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+        />
         <Meta />
         <Links />
       </head>
       <body>
-        {children}
-        <ScrollRestoration />
-        <Scripts />
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+
+          {children}
+          <ScrollRestoration />
+          <Scripts />
+        </ThemeProvider>
       </body>
     </html>
   );
