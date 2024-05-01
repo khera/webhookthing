@@ -31,7 +31,7 @@ export async function action ({ request }: ActionFunctionArgs) {
 function AnonLoginForm() {
     return (
         <Form method="post" action="/loginanon">
-            <Button type="submit">Sign In Anonymously</Button>
+            <Button fullWidth type="submit">Sign In Anonymously</Button>
         </Form>
         
     );
@@ -44,7 +44,7 @@ const SignIn = () => {
     
     return (
         <Container component="main" maxWidth="xs">
-            <Typography variant="h2">Sign In</Typography>
+            <Typography color="text.secondary" variant="h3">Sign In</Typography>
 
             <Box
                 sx={{
@@ -61,6 +61,7 @@ const SignIn = () => {
                     <TextField
                         margin="normal"
                         required
+                        fullWidth
                         id="email"
                         label="Email Address"
                         name="email"
@@ -69,13 +70,14 @@ const SignIn = () => {
                     <TextField
                         margin="normal"
                         required
+                        fullWidth
                         name="password"
                         label="Password"
                         type="password"
                         id="password"
                         autoComplete="current-password"
                     />
-                    <Button variant="contained" type="submit">Sign In</Button>
+                    <Button fullWidth variant="contained" type="submit">Sign In</Button>
                 </Form>
                 {allowAnonymous ? <AnonLoginForm /> : null}
             </Box>
