@@ -4,12 +4,15 @@ The purpose of this app is to help debug [web hooks](https://en.wikipedia.org/wi
 
 I wrote this because every other service out there for testing my web hooks is either a) paid, or b) changes the URL every few days. I want a stable URL for my web hooks.
 
+The UI is currently pretty horrible. It just renders each hook's data as it comes in at the top of the screen. There should be a list on the left side and you click on it to render on the right side. It could also use a header bar.
+
 Features:
 
 - [ ] Deploy to your own infrastructure
 - [x] Private data to you, and you control who has an account on it
 - [x] Optionally permit anonymous users
 - [x] Can run locally on your own computer if you're just testing local web hooks
+- [ ] Automatically cleans out old data and anonymous users
 
 There is no signup form because it is intended as a personal use app. To create users you need to use the user management screens on the Supabase Dashboard.
 
@@ -36,6 +39,7 @@ If you plan to modify the code check out the project repo using `git clone`. You
 - `jq` via `brew install jq`
 - `mermerd` via [GitHub download](https://github.com/KarnerTh/mermerd)
 - Open the [recommended extensions file](./.vscode/extensions.json) and install the recommended VS Code modules, assuming you're using VS Code.
+- If you installed the Mermaid extension in VS Code, run the `Mermaid:Update mermaid library to the latest` command to get a newer version of the library.
 
 ### Run the Project
 
@@ -46,6 +50,10 @@ Run `npm install` to get all of the Node dependencies installed, followed by `np
 Open the development url with your web browser: [http://localhost:5173/](http://localhost:5173/) and login using the demo user credentials or use the anonymous login feature if you enabled it.
 
 Issue some GET and POST requests to the URL it shows you. If you installed the recommended modules into VS Code, you can open the file [rest_tests.rest](./__tests__/rest_tests.rest) and submit the test samples there.
+
+An anonymous user is limited to 10 requests, to keep from being massively abused. They can keep creating new accounts, though. TBD: auto-delete old anonymous users.
+
+Regular users are limited to 1000 requests, also to keep the service from being abused. Older data can just be deleted (currently must be done via SQL or Supabase Dashboard). TBD: delete "old" data on schedule.
 
 Create any new users you want using the Supabase dashboard.
 
