@@ -147,6 +147,10 @@ components:
         success:
           type: boolean
           example: true
+        id:
+          type: string
+          example: BwxNmmON67
+          description: ID of submitted record
       required:
         - success
 

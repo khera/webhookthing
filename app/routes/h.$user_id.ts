@@ -47,7 +47,7 @@ async function parse_and_save (request: LoaderFunctionArgs["request"], params: L
         body_raw,
         remote_ip
     })
-    .select('submission_id')
+    .select('public_id')
     .maybeSingle();
 
     if (error) {
@@ -67,8 +67,8 @@ async function parse_and_save (request: LoaderFunctionArgs["request"], params: L
         }
         return json({ error: message }, status_code); 
     } else {
-        logger.debug(`submission_id`, data?.submission_id);
-        return json({ success: true }, 200);
+        logger.debug(`public_id`, data?.public_id);
+        return json({ success: true, id: data?.public_id }, 200);
     }
 }
 
