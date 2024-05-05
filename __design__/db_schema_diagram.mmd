@@ -1,3 +1,7 @@
+---
+title: Database Schema Diagram
+---
+
 erDiagram
     submissions {
         text body_raw 
@@ -18,3 +22,9 @@ erDiagram
     }
 
     submissions }o--|| user_metadata : "user_id"
+
+    au["Supabase System Users Table"] {
+        uuid id PK "Plus many more fields"
+    }
+
+    user_metadata ||--|| au : "user_id"

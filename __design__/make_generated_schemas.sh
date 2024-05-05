@@ -17,11 +17,13 @@ then
    exit 1
 fi
 
+TMPFILE=`mktemp`
 trap cleanup 1 2 3 6
 
 cleanup()
 {
   echo "Caught Signal ... cleaning up."
+  rm -f ${TMPFILE}
   exit 1
 }
 
@@ -33,7 +35,26 @@ npx supabase gen types typescript --local > app/lib/generated/database.types.ts
 # make a flattened compacted JSON version of the schema for the API documentation page
 npx @redocly/cli bundle --dereferenced --ext json __design__/PublicAPI.yml | jq --compact-output . > app/lib/generated/PublicAPI.json 
 
-mermerd -c postgresql://postgres:postgres@localhost:54322/postgres  -o __design__/db_schema_diagram.mmd --schema public --useAllTables
+# assemble the schema diagram from the database schema, adding a header and link to system users table
+# requires mermaid v10.5.0 or newer (run `Mermad:Update` in VS Code extension)
+mermerd -c postgresql://postgres:postgres@localhost:54322/postgres -o ${TMPFILE} --schema public --useAllTables
+SCHEMAFILE=__design__/db_schema_diagram.mmd
+cat > ${SCHEMAFILE} <<EOH
+---
+title: Database Schema Diagram
+---
+
+EOH
+cat ${TMPFILE} >> ${SCHEMAFILE}
+cat >> ${SCHEMAFILE} <<EOM
+
+    au["Supabase System Users Table"] {
+        uuid id PK "Plus many more fields"
+    }
+
+    user_metadata ||--|| au : "user_id"
+EOM
+rm ${TMPFILE}
 
 # dump the current public schema for reference
 npx supabase db dump --local --keep-comments > supabase/current_schema.sql
