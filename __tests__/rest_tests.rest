@@ -36,6 +36,7 @@ X-Forwarded-For: 1.2.3.4
 # @name post_json
 POST {{hooksite}}
 Content-type: application/json
+X-Forwarded-For: 2001:db8:85a3::8a2e:370:7334
 
 {
     "hello": "world",
