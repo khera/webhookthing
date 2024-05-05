@@ -48,6 +48,7 @@ X-Forwarded-For: 2001:db8:85a3::8a2e:370:7334
 # @name post_plain
 POST {{hooksite}}?foo=bar
 Content-type: text/plain
+X-Forwarded-For: 2001:db8:85a3::8a2e:370:7334
 
 Hello, world & friends!
 

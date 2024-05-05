@@ -3,7 +3,8 @@ import { useOutletContext, useLoaderData } from "@remix-run/react";
 import type { OutletContext } from "~/lib/types";
 import { useEffect, useState } from "react";
 
-import {Typography, LinearProgress, Box, Button, Link, Grid, List, ListItem, ListItemText, Divider} from '@mui/material';
+import {Typography, LinearProgress, Box, Button, Link, Grid, List, ListItem, ListItemText, Divider, Chip} from '@mui/material';
+import { DataGrid } from "@mui/x-data-grid";
 
 import { JsonView, allExpanded } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
@@ -84,7 +85,7 @@ export default function Index() {
           <Button variant="outlined" href="/api-spec">API Specification</Button>
         </Grid>
       </Grid>
-      <Divider></Divider>
+      <Divider />
       <Typography variant="h3" color="text.secondary">Submission List</Typography>
       <List>
         {
@@ -92,7 +93,7 @@ export default function Index() {
             return (
               <ListItem key={index}>
                 <ListItemText>
-                  <JsonView data={item} shouldExpandNode={allExpanded} clickToExpandNode />
+                  <RenderSubmission data={item} />
                 </ListItemText>
               </ListItem>
             )
@@ -107,11 +108,68 @@ export default function Index() {
   );
 }
 
-export function ErrorBoundary({ error }: { error: Error }) {
-  console.error(error);
+/**
+ * Component to display the JSON of a webhook submission
+ */
+type SubmissionWithId = Submission & { id?: string };
+
+function RenderSubmission({ data }: { data: SubmissionWithId }) {
+  data.id = data.public_id; // add an `id` field to the data so that the DataGrid can use it
+  // mutate the headers field to an array of field name + value
+  const header_data = data.headers as Record<string,string>;  // Supabase types this as Json which is unusable to iterate.
+  const headers = Object.entries(header_data).map(([key, value], index) => ({ id: index, field: key, value }));
+
+  let content_as_json;
+  switch (header_data['content-type']) {
+    case('application/json'):
+      content_as_json = JSON.parse(data.body_raw ?? '');
+      break;
+    default:
+      content_as_json = data.body_raw ?? '';
+  }
+
   return (
-    <div>
-      <p>An unexpected error occurred: {error.message}</p>
-    </div>
+    <Box sx={{ width: '100%' }}>
+      <Divider>
+        <Chip label={"Request " + data.id} />
+      </Divider>
+       <DataGrid
+          rows={[data]}
+          columns={[
+            { field: "public_id", headerName: "ID", type: 'string', width: 120 },
+            { field: "submission_time", headerName: "Time", type: 'dateTime', valueGetter: (value) => { return new Date(value); }, width: 180},
+            { field: "http_method", headerName: "Method", type: "string", width: 100 },
+            { field: "remote_ip", headerName: "IP Address", type: 'string', width: 200 },
+            { field: "query_string", headerName: "Query String", type: 'string', width: 200 },
+          ]}
+          disableColumnMenu
+          disableColumnSorting
+          hideFooter
+      />
+      <Divider />
+      <DataGrid
+        rows={headers}
+        columns={[
+          { field: "field", headerName: "Header Field", type: 'string', width: 200 },
+          { field: "value", headerName: "Value", type: 'string', width: 400 },
+        ]}
+        disableColumnMenu
+        disableColumnSorting
+        hideFooter
+      />
+      <Divider />
+      { data.http_method == 'GET' ? (
+        <Typography variant="body2">Empty Body for GET Request</Typography>
+      ) : (
+        <>
+          <Typography variant="h5">Body</Typography>
+          { typeof content_as_json === 'object' ? (
+            <JsonView data={content_as_json} shouldExpandNode={allExpanded} clickToExpandNode />
+          ) : (
+            <Typography variant="body1">{content_as_json}</Typography>
+          )}
+        </>
+    )}
+    </Box>
   );
 }
