@@ -4,7 +4,7 @@
 
 import { test, expect, describe } from '@jest/globals';
 
-import { siteURL } from "./siteURL";
+import { siteURL } from "./siteURL.server";
 
 describe('URL from environment', () => {
     test('local URL', () => {

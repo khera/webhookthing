@@ -5,7 +5,7 @@
 import { json } from "@remix-run/node"; // or cloudflare/deno
 
 import package_info from '../../package.json';
-import { siteURL } from '../lib/siteURL';
+import { siteURL } from '../lib/siteURL.server';
 import { logger } from "~/lib/logger";
 
 export const loader = async () => {

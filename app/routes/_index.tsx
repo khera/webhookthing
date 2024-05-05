@@ -10,7 +10,7 @@ import 'react-json-view-lite/dist/index.css';
 
 import SignIn from './login';
 import type { Tables } from "~/lib/supabase.server";
-import { siteURL } from "~/lib/siteURL";
+import { siteURL } from "~/lib/siteURL.server";
 
 type Submission = Tables<'submissions'>;
 
@@ -103,6 +103,15 @@ export default function Index() {
     ) : (
       <SignIn />
     )}
+    </div>
+  );
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+  console.error(error);
+  return (
+    <div>
+      <p>An unexpected error occurred: {error.message}</p>
     </div>
   );
 }
