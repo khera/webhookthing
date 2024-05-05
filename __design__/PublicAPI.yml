@@ -2,7 +2,7 @@ openapi: '3.0.3'
 
 info:
   title: Web Hook Thing
-  version: "2024.04.21"
+  version: "2024.05.05"
   description: |
     Test webhooks using HTTP GET/POST to the custom URL for your login.
 
