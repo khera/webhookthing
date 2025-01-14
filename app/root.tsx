@@ -18,7 +18,7 @@ import { createSupabaseServerClient, type Database } from '~/lib/supabase.server
 import type { OutletContext } from "~/lib/types";
 
 import { withEmotionCache } from '@emotion/react';
-import { ClientStyleContext } from "~/lib/ClientStyleContext";
+import { ClientStyleContext } from "~/components/ClientStyleContext";
 
 import { theme } from '~/theme';
 import { CssBaseline, ThemeProvider, unstable_useEnhancedEffect as useEnhancedEffect } from '@mui/material';

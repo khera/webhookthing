@@ -3,7 +3,7 @@ import { RemixBrowser } from "@remix-run/react";
 import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 
-import { MuiProvider } from "~/lib/MuiProvider";
+import { MuiProvider } from "~/components/MuiProvider";
 
 function hydrate () {
   startTransition(() => {

@@ -12,7 +12,7 @@ import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
 
-import { MuiProvider } from "~/lib/MuiProvider";
+import { MuiProvider } from "~/components/MuiProvider";
 
 export const streamTimeout = 60_500; // The AI APIs can take a while to respond, and we can just sit around and wait.
 
