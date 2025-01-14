@@ -5,7 +5,6 @@
 */
 
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
-import { data } from "@remix-run/node"; // or cloudflare/deno
 import { getClientIPAddress } from "remix-utils/get-client-ip-address";
 
 import { logger } from "~/lib/logger";
@@ -65,10 +64,10 @@ async function parse_and_save (request: LoaderFunctionArgs["request"], params: L
             message = 'Too many records for this user';
             logger.warn(`User ${user_id} is over quota.`);
         }
-        return data({ error: message }, status_code); 
+        return Response.json({ error: message }, { status: status_code }); 
     } else {
         logger.debug(`public_id`, submission_data?.public_id);
-        return data({ success: true, id: submission_data?.public_id });
+        return Response.json({ success: true, id: submission_data?.public_id }, { status: 200 });
     }
 }
 
