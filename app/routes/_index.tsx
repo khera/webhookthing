@@ -3,10 +3,10 @@ import { useOutletContext, useLoaderData } from "@remix-run/react";
 import type { OutletContext } from "~/lib/types";
 import { useEffect, useState } from "react";
 
-import {Typography, LinearProgress, Box, Button, Link, Grid, List, ListItem, ListItemText, Divider, Chip} from '@mui/material';
+import {Typography, LinearProgress, Box, Button, Link, Grid, List, ListItem, ListItemText, Divider, Chip, useMediaQuery} from '@mui/material';
 import { DataGrid } from "@mui/x-data-grid";
 
-import { JsonView, allExpanded } from 'react-json-view-lite';
+import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 
 import SignIn from './login';
@@ -118,6 +118,7 @@ function RenderSubmission({ data }: { data: SubmissionWithId }) {
   // mutate the headers field to an array of field name + value
   const header_data = data.headers as Record<string,string>;  // Supabase types this as Json which is unusable to iterate.
   const headers = Object.entries(header_data).map(([key, value], index) => ({ id: index, field: key, value }));
+  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
   let content_as_json;
   switch (header_data['content-type']) {
@@ -164,7 +165,7 @@ function RenderSubmission({ data }: { data: SubmissionWithId }) {
         <>
           <Typography variant="h5">Body</Typography>
           { typeof content_as_json === 'object' ? (
-            <JsonView data={content_as_json} shouldExpandNode={allExpanded} clickToExpandNode />
+            <JsonView data={content_as_json} shouldExpandNode={allExpanded} style={prefersDarkMode ? darkStyles : defaultStyles} clickToExpandNode />
           ) : (
             <Typography variant="body1">{content_as_json}</Typography>
           )}

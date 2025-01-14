@@ -2,7 +2,7 @@ openapi: '3.0.3'
 
 info:
   title: Web Hook Thing
-  version: "2024.05.05"
+  version: "2025.01.13"
   description: |
     Test webhooks using HTTP GET/POST to the custom URL for your login.
 
@@ -28,7 +28,7 @@ paths:
         Check to see if server is responding to any API requests. Returns the current release version number, current time, and configured server URL.
       responses:
         "200":
-          $ref: "#/components/responses/200SubmitHook"
+          $ref: "#/components/responses/200PingOk"
         "500":
           $ref: "#/components/responses/500InternalError"
 
