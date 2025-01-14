@@ -2,7 +2,6 @@
     "recommendations": [
         "42Crunch.vscode-openapi",
         "dotenv.dotenv-vscode",
-        "eamodio.gitlens",
         "humao.rest-client",
         "redhat.vscode-yaml",
         "tomoyukim.vscode-mermaid-editor",
