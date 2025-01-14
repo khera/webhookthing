@@ -9,17 +9,19 @@ import {
   isRouteErrorResponse,
   useRouteError 
 } from "@remix-run/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { createBrowserClient } from '@supabase/ssr';
 import type { Session } from '@supabase/supabase-js';
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { data, type LoaderFunctionArgs } from "@remix-run/node";
 
 import { createSupabaseServerClient, type Database } from '~/lib/supabase.server';
 import type { OutletContext } from "~/lib/types";
 
-import theme from '~/theme';
-import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
+import { withEmotionCache } from '@emotion/react';
+import { ClientStyleContext } from "~/lib/ClientStyleContext";
+
+import { theme } from '~/theme';
+import { CssBaseline, ThemeProvider, unstable_useEnhancedEffect as useEnhancedEffect } from '@mui/material';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const env = {
@@ -32,12 +34,27 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const { data: { session: serverSession } } = await supabaseServerClient.auth.getSession();
 
-  return json({ env, serverSession, headers });
+  return data({ env, serverSession, headers });
 }
 
+export const Layout = withEmotionCache(({ children }: { children: React.ReactNode }, emotionCache) => {
+    const clientStyleData = useContext(ClientStyleContext);
 
-export function Layout({ children }: { children: React.ReactNode }) {
-  return (
+    // Only executed on client
+    useEnhancedEffect(() => {
+      // re-link sheet container
+      emotionCache.sheet.container = document.head;
+      // re-inject tags
+      const tags = emotionCache.sheet.tags;
+      emotionCache.sheet.flush();
+      tags.forEach((tag) => {
+        (emotionCache.sheet as any)._insertTag(tag);
+      });
+      // reset cache to reapply global styles
+      clientStyleData.reset();
+    }, []);
+
+    return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
@@ -54,17 +71,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-
-          {children}
-          <ScrollRestoration />
-          <Scripts />
-        </ThemeProvider>
+        <CssBaseline />
+        {children}
+        <ScrollRestoration />
+        <Scripts />
       </body>
     </html>
   );
-}
+});
 
 export default function App() {
   // set up a Supabase browser client and stash it in the OutletContext for other pages to access it
@@ -112,12 +126,14 @@ export function ErrorBoundary() {
     );
   } else if (error instanceof Error) {
     return (
-      <>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+
         <h1>Error</h1>
         <p>{error.message}</p>
         <p>The stack trace is:</p>
         <pre>{error.stack}</pre>
-      </>
+      </ThemeProvider>
     );
   } else {
     return <h1>Unknown Error</h1>;

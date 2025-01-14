@@ -1,19 +1,43 @@
-import { createTheme } from '@mui/material/styles';
-import { red, blue, purple } from '@mui/material/colors';
+import { colors, createTheme, responsiveFontSizes } from '@mui/material';
 
 // Create a theme instance.
-const theme = createTheme({
+const base_theme = createTheme({
   palette: {
     primary: {
-      main: blue[600],
+      main: colors.blue[600],
     },
     secondary: {
-      main: purple[200],
+      main: colors.purple[200],
     },
     error: {
-      main: red.A400,
+      main: colors.red.A400,
     },
+  },
+  typography: {
+    h1: {
+      fontSize: '3rem',
+    },
+    h2: {
+      fontSize: '2.5rem',
+    },
+    h3: {
+      fontSize: '2rem',
+    },
+    h4: {
+      fontSize: '1.6rem',
+    },
+    h5: {
+      fontSize: '1.3rem',
+    },
+    h6: {
+      fontSize: '1.1rem',
+    },
+  },
+  // for MUI6 to auto-switch dark/light
+  cssVariables: true,
+  colorSchemes: {
+    dark: true,
   },
 });
 
-export default theme;
+export const theme = responsiveFontSizes(base_theme);
