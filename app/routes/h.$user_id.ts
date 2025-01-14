@@ -5,7 +5,7 @@
 */
 
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node"; // or cloudflare/deno
+import { data } from "@remix-run/node"; // or cloudflare/deno
 import { getClientIPAddress } from "remix-utils/get-client-ip-address";
 
 import { logger } from "~/lib/logger";
@@ -39,7 +39,7 @@ async function parse_and_save (request: LoaderFunctionArgs["request"], params: L
 
     logger.debug(`Submitting ${http_method} request for ${user_id}`);
 
-    const { data, error } = await supabaseAdminClient.from("submissions").insert({
+    const { data: submission_data, error } = await supabaseAdminClient.from("submissions").insert({
         user_id,
         http_method,
         query_string,
@@ -65,10 +65,10 @@ async function parse_and_save (request: LoaderFunctionArgs["request"], params: L
             message = 'Too many records for this user';
             logger.warn(`User ${user_id} is over quota.`);
         }
-        return json({ error: message }, status_code); 
+        return data({ error: message }, status_code); 
     } else {
-        logger.debug(`public_id`, data?.public_id);
-        return json({ success: true, id: data?.public_id }, 200);
+        logger.debug(`public_id`, submission_data?.public_id);
+        return data({ success: true, id: submission_data?.public_id });
     }
 }
 

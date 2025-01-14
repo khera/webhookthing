@@ -1,4 +1,4 @@
-import { json, redirect } from '@remix-run/node';
+import { data, redirect } from '@remix-run/node';
 import type { ActionFunctionArgs } from '@remix-run/node';
 
 import { Form, useActionData, useOutletContext } from '@remix-run/react';
@@ -22,10 +22,10 @@ export async function action ({ request }: ActionFunctionArgs) {
     
     if (error) {
         logger.debug(`login error ${error.message}, status=${error.status}`);
-        return json({ error: error.message }, { headers })
+        return data({ error: error.message }, { headers })
     }
     
-    return redirect('/', { headers });    // send back to home page with cookies set
+    throw redirect('/', { headers });    // send back to home page with cookies set
 }
 
 function AnonLoginForm() {

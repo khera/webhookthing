@@ -2,7 +2,7 @@
 *  handle the `GET /status` API endpoint, returning a simple status JSON object
 */
 
-import { json } from "@remix-run/node"; // or cloudflare/deno
+import { data } from "@remix-run/node"; // or cloudflare/deno
 
 import package_info from '../../package.json';
 import { siteURL } from '../lib/siteURL.server';
@@ -14,5 +14,5 @@ export const loader = async () => {
   const site_url = siteURL();
   logger.debug(`debug mode is enabled`);
 
-  return json({ version, server_time, site_url }, 200);
+  return data({ version, server_time, site_url });
 };

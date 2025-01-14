@@ -14,7 +14,9 @@ import { renderToPipeableStream } from "react-dom/server";
 
 import { MuiProvider } from "~/lib/MuiProvider";
 
-const ABORT_DELAY = 5_000;
+export const streamTimeout = 60_500; // The AI APIs can take a while to respond, and we can just sit around and wait.
+
+const BOT_ABORT_DELAY = 1_000;  // don't waste time on bots. They're not getting AI responses anyway.
 
 export default function handleRequest(
   request: Request,
@@ -23,7 +25,7 @@ export default function handleRequest(
   remixContext: EntryContext,
   // This is ignored so we can keep it in the template for visibility.  Feel
   // free to delete this parameter in your app if you're not using it!
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // oxlint-disable-next-line no-unused-vars
   loadContext: AppLoadContext
 ) {
   return isbot(request.headers.get("user-agent") || "")
@@ -53,7 +55,7 @@ function handleBotRequest(
       <RemixServer
         context={remixContext}
         url={request.url}
-        abortDelay={ABORT_DELAY}
+        abortDelay={BOT_ABORT_DELAY}
       />,
       {
         onAllReady() {
@@ -87,7 +89,7 @@ function handleBotRequest(
       }
     );
 
-    setTimeout(abort, ABORT_DELAY);
+    setTimeout(abort, BOT_ABORT_DELAY);
   });
 }
 
@@ -104,7 +106,6 @@ function handleBrowserRequest(
         <RemixServer
           context={remixContext}
           url={request.url}
-          abortDelay={ABORT_DELAY}
         />
       </MuiProvider>,
       {
@@ -139,6 +140,6 @@ function handleBrowserRequest(
       }
     );
 
-    setTimeout(abort, ABORT_DELAY);
+    setTimeout(abort, streamTimeout + 1000);
   });
 }

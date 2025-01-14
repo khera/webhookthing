@@ -1,4 +1,4 @@
-import { json, redirect } from '@remix-run/node';
+import { data, redirect } from '@remix-run/node';
 import type { ActionFunctionArgs } from '@remix-run/node';
 
 import { createSupabaseServerClient } from '~/lib/supabase.server';
@@ -8,14 +8,14 @@ import SignIn from './login';
 
 export function loader () {
     // if someone GETs this URL just send them to home page
-    return redirect('/');
+    throw redirect('/');
 }
 
 export async function action ({ request }: ActionFunctionArgs) {
     const { supabaseServerClient, headers } = createSupabaseServerClient(request);
     const allowAnonymous = process.env.PERMIT_ANONYMOUS_USERS === 'true' ? true : false;
     if (!allowAnonymous) {
-        return json({ error: "Anonymous signin is disabled in app configuration." }, { headers });
+        return data({ error: "Anonymous signin is disabled in app configuration." }, { headers });
     }
 
     const { data: {session}, error } = await supabaseServerClient.auth.signInAnonymously();
@@ -26,7 +26,7 @@ export async function action ({ request }: ActionFunctionArgs) {
             // Anonymous sign-ins are disabled, status=422
             logger.error("Configuration Error: Supabase refusing anonymous signin but feature is enabled in app.");
         }
-        return json({ error: error.message }, { headers })
+        return data({ error: error.message }, { headers })
     }
 
     if (session) {
@@ -35,7 +35,7 @@ export async function action ({ request }: ActionFunctionArgs) {
 
     logger.debug(`logged in anonymous user ${session?.user.id}`);
 
-    return redirect('/', { headers });    // send back to home page with cookies set
+    throw redirect('/', { headers });    // send back to home page with cookies set
 }
 
 export default SignIn;

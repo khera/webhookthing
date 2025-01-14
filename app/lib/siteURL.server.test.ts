@@ -2,7 +2,7 @@
  * Tests for src/config/siteURL
  */
 
-import { test, expect, describe } from '@jest/globals';
+import { test, expect, describe } from 'vitest';
 
 import { siteURL } from "./siteURL.server";
 

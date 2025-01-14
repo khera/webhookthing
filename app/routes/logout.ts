@@ -22,5 +22,5 @@ export async function loader ({ request }: LoaderFunctionArgs) {
 }
 
 export async function action ({ request }: ActionFunctionArgs) {
-        return await do_logout(request);
+    return await do_logout(request);
 }
