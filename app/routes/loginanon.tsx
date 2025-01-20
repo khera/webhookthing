@@ -15,6 +15,7 @@ export async function action ({ request }: ActionFunctionArgs) {
     const { supabaseServerClient, headers } = createSupabaseServerClient(request);
     const allowAnonymous = process.env.PERMIT_ANONYMOUS_USERS === 'true' ? true : false;
     if (!allowAnonymous) {
+        logger.error("Anonymous signin is disabled in app configuration.");
         return data({ error: "Anonymous signin is disabled in app configuration." }, { headers });
     }
 
@@ -30,10 +31,8 @@ export async function action ({ request }: ActionFunctionArgs) {
     }
 
     if (session) {
-        await supabaseServerClient.auth.signOut()
+        logger.debug(`logged in anonymous user ${session.user.id}`);
     }
-
-    logger.debug(`logged in anonymous user ${session?.user.id}`);
 
     throw redirect('/', { headers });    // send back to home page with cookies set
 }

@@ -37,11 +37,11 @@ function AnonLoginForm() {
     );
 }
 
-const SignIn = () => {
+export default function SignIn() {
     const { allowAnonymous } = useOutletContext<OutletContext>();
-    
+
     const actionResponse = useActionData<typeof action>();
-    
+
     return (
         <Container component="main" maxWidth="xs">
             <Typography color="text.secondary" variant="h3">Sign In</Typography>
@@ -56,7 +56,7 @@ const SignIn = () => {
             >
 
                 {actionResponse?.error ? (<Typography color="error.main">{actionResponse.error}, please try again.</Typography>) : (<></>)}
-                
+
                 <Form method="post" action="/login">
                     <TextField
                         margin="normal"
@@ -65,8 +65,7 @@ const SignIn = () => {
                         id="email"
                         label="Email Address"
                         name="email"
-                        autoComplete="email"
-                    />
+                        autoComplete="email" />
                     <TextField
                         margin="normal"
                         required
@@ -75,8 +74,7 @@ const SignIn = () => {
                         label="Password"
                         type="password"
                         id="password"
-                        autoComplete="current-password"
-                    />
+                        autoComplete="current-password" />
                     <Button fullWidth variant="contained" type="submit">Sign In</Button>
                 </Form>
                 {allowAnonymous ? <AnonLoginForm /> : null}
@@ -84,4 +82,3 @@ const SignIn = () => {
         </Container>
     );
 }
-export default SignIn;
