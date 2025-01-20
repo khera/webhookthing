@@ -3,7 +3,7 @@ import { useOutletContext, useLoaderData } from "@remix-run/react";
 import type { OutletContext } from "~/lib/types";
 import { useEffect, useState } from "react";
 
-import {Typography, LinearProgress, Box, Button, Link, Grid, List, ListItem, ListItemText, Divider, Chip, useMediaQuery} from '@mui/material';
+import {Typography, LinearProgress, Box, Button, Link, Grid2 as Grid, List, ListItem, ListItemText, Divider, Chip, useMediaQuery} from '@mui/material';
 import { DataGrid } from "@mui/x-data-grid";
 
 import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
@@ -72,20 +72,20 @@ export default function Index() {
   }
 
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
+    <>
       <Typography variant="h2">Web Hook Thing</Typography>
       {serverSession?.user.id ? 
     (<>
-      <Grid container direction={"column"}>
+      <Grid container direction={"column"} sx={{ mb: 2 }}>
         <Grid>
-        <Typography variant="body1">Logged in as {serverSession?.user.is_anonymous ? 'anon' : 'real'} user. Submit hooks to: <Link href={siteURL + 'h/' + serverSession?.user.id}>{siteURL + 'h/' + serverSession?.user.id}</Link></Typography>
+          <Typography>Logged in as {serverSession?.user.is_anonymous ? 'anon' : 'real'} user. Submit hooks to: <Link href={siteURL + 'h/' + serverSession?.user.id}>{siteURL + 'h/' + serverSession?.user.id}</Link></Typography>
         </Grid>
         <Grid>
           <Button variant="outlined" href="/logout">Sign Out</Button>
           <Button variant="outlined" href="/api-spec">API Specification</Button>
         </Grid>
       </Grid>
-      <Divider />
+      <Divider sx={{ mb: 2 }} />
       <Typography variant="h3" color="text.secondary">Submission List</Typography>
       <List>
         {
@@ -104,7 +104,7 @@ export default function Index() {
     ) : (
       <SignIn />
     )}
-    </div>
+    </>
   );
 }
 
