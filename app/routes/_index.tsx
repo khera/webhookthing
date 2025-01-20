@@ -3,7 +3,7 @@ import { useOutletContext, useLoaderData } from "@remix-run/react";
 import type { OutletContext } from "~/lib/types";
 import { useEffect, useState } from "react";
 
-import {Typography, LinearProgress, Box, Button, Link, Grid2 as Grid, List, ListItem, ListItemText, Divider, Chip, useMediaQuery} from '@mui/material';
+import {Typography, LinearProgress, Box, Button, Link, List, ListItem, ListItemText, Divider, Chip, useMediaQuery, Container, Stack, Drawer} from '@mui/material';
 import { DataGrid } from "@mui/x-data-grid";
 
 import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
@@ -31,6 +31,8 @@ export default function Index() {
   const { siteURL } = useLoaderData<typeof loader>();
   const [submissionList, setSubmissionList] = useState<Submission[]>([]);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
+
+  const drawerWidth = 200;
 
   useEffect(() => {
       //console.debug(`pre fetch`);
@@ -72,19 +74,20 @@ export default function Index() {
   }
 
   return (
-    <>
+    <Container component="main" maxWidth={false}>
       <Typography variant="h2">Web Hook Thing</Typography>
       {serverSession?.user.id ? 
     (<>
-      <Grid container direction={"column"} sx={{ mb: 2 }}>
-        <Grid>
-          <Typography>Logged in as {serverSession?.user.is_anonymous ? 'anon' : 'real'} user. Submit hooks to: <Link href={siteURL + 'h/' + serverSession?.user.id}>{siteURL + 'h/' + serverSession?.user.id}</Link></Typography>
-        </Grid>
-        <Grid>
-          <Button variant="outlined" href="/logout">Sign Out</Button>
-          <Button variant="outlined" href="/api-spec">API Specification</Button>
-        </Grid>
-      </Grid>
+      <Typography>
+        Logged in as {serverSession?.user.is_anonymous ? 'anon' : 'real'} user.
+        Submit hooks to: <Link href={siteURL + 'h/' + serverSession?.user.id}>{siteURL + 'h/' + serverSession?.user.id}</Link> with
+        GET/PUT/POST/PATCH/DELETE.
+      </Typography>
+
+      <Stack spacing={2} direction={"row"} sx={{ m: 2 }}>
+        <Button variant="outlined" href="/logout">Sign Out</Button>
+        <Button variant="outlined" href="/api-spec">API Specification</Button>
+      </Stack>
       <Divider sx={{ mb: 2 }} />
       <Typography variant="h3" color="text.secondary">Submission List</Typography>
       <List>
@@ -104,7 +107,7 @@ export default function Index() {
     ) : (
       <SignIn />
     )}
-    </>
+    </Container>
   );
 }
 

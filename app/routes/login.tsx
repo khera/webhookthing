@@ -43,9 +43,7 @@ export default function SignIn() {
     const actionResponse = useActionData<typeof action>();
 
     return (
-        <Container component="main" maxWidth="xs">
-            <Typography color="text.secondary" variant="h3">Sign In</Typography>
-
+        <Container maxWidth="xs">
             <Box
                 sx={{
                     marginTop: 8,
@@ -54,8 +52,9 @@ export default function SignIn() {
                     alignItems: 'center',
                 }}
             >
+                <Typography color="text.secondary" variant="h3">Sign In</Typography>
 
-                {actionResponse?.error ? (<Typography color="error.main">{actionResponse.error}, please try again.</Typography>) : (<></>)}
+                {actionResponse?.error && <Typography color="error.main">{actionResponse.error}, please try again.</Typography>}
 
                 <Form method="post" action="/login">
                     <TextField
@@ -77,7 +76,7 @@ export default function SignIn() {
                         autoComplete="current-password" />
                     <Button fullWidth variant="contained" type="submit">Sign In</Button>
                 </Form>
-                {allowAnonymous ? <AnonLoginForm /> : null}
+                {allowAnonymous && <AnonLoginForm />}
             </Box>
         </Container>
     );
