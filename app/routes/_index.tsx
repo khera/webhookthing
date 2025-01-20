@@ -3,7 +3,7 @@ import { useOutletContext, useLoaderData } from "@remix-run/react";
 import type { OutletContext } from "~/lib/types";
 import { useEffect, useState } from "react";
 
-import {Typography, LinearProgress, Box, Button, Link, List, ListItem, ListItemText, Divider, Chip, useMediaQuery, Container, Stack, Drawer} from '@mui/material';
+import {Typography, LinearProgress, Box, List, ListItem, ListItemText, useMediaQuery, Container, Drawer, Toolbar, ListItemButton} from '@mui/material';
 import { DataGrid } from "@mui/x-data-grid";
 
 import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
@@ -12,6 +12,7 @@ import 'react-json-view-lite/dist/index.css';
 import SignIn from './login';
 import type { Tables } from "~/lib/supabase.server";
 import { siteURL } from "~/lib/siteURL.server";
+import { HeaderBar } from "~/components/HeaderBar";
 
 type Submission = Tables<'submissions'>;
 
@@ -31,8 +32,9 @@ export default function Index() {
   const { siteURL } = useLoaderData<typeof loader>();
   const [submissionList, setSubmissionList] = useState<Submission[]>([]);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [selectedItem, setSelectedItem] = useState<number>(0);
 
-  const drawerWidth = 200;
+  const drawerWidth = 230;
 
   useEffect(() => {
       //console.debug(`pre fetch`);
@@ -59,7 +61,8 @@ export default function Index() {
     const channel = supabase
       .channel('*')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'submissions' }, (payload) => {
-        setSubmissionList((current: Submission[]) => ([payload.new as Submission, ...current]))
+        setSubmissionList((current: Submission[]) => ([payload.new as Submission, ...current]));
+        setSelectedItem(0);
       })
       .subscribe()
 
@@ -67,45 +70,52 @@ export default function Index() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [supabase, serverSession, setSubmissionList, submissionList])
+  }, [supabase, serverSession, setSubmissionList, submissionList, setSelectedItem, selectedItem]);
 
   if (serverSession && !isLoaded) {
-    return (<Box sx={{ width: '100%' }}><LinearProgress /></Box>);
+    return (<>
+      <HeaderBar user_id={serverSession.user.id} siteURL={siteURL} />
+      <Box sx={{ width: '100%' }}><LinearProgress /></Box>
+    </>);
   }
 
   return (
     <Container component="main" maxWidth={false}>
-      <Typography variant="h2">Web Hook Thing</Typography>
       {serverSession?.user.id ? 
-    (<>
-      <Typography>
-        Logged in as {serverSession?.user.is_anonymous ? 'anon' : 'real'} user.
-        Submit hooks to: <Link href={siteURL + 'h/' + serverSession?.user.id}>{siteURL + 'h/' + serverSession?.user.id}</Link> with
-        GET/PUT/POST/PATCH/DELETE.
-      </Typography>
-
-      <Stack spacing={2} direction={"row"} sx={{ m: 2 }}>
-        <Button variant="outlined" href="/logout">Sign Out</Button>
-        <Button variant="outlined" href="/api-spec">API Specification</Button>
-      </Stack>
-      <Divider sx={{ mb: 2 }} />
-      <Typography variant="h3" color="text.secondary">Submission List</Typography>
-      <List>
-        {
-          submissionList.map((item, index) => {
-            return (
-              <ListItem key={index}>
-                <ListItemText>
-                  <RenderSubmission data={item} />
-                </ListItemText>
-              </ListItem>
-            )
-          })
-        }
-      </List>
-     </>
+    (
+    <>
+      <HeaderBar user_id={serverSession.user.id} siteURL={siteURL} />
+      <Box sx={{ display: 'flex' }}>
+        <Drawer variant="permanent" anchor="left" sx={{ width: drawerWidth, flexShrink: 0, [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' } }}>
+          <Toolbar />
+          <Box sx={{ overflow: 'auto' }}>
+            <Typography align="center" variant="h4" color="text.secondary">Submissions</Typography>
+            <List dense={true}>
+            {
+              submissionList.map((item, index) => {
+                const d = new Date(item.submission_time);
+                return (
+                  <ListItem key={index}>
+                    <ListItemButton onClick={() => setSelectedItem(index)} sx={{ borderLeft: 4, borderLeftColor: index === selectedItem ? 'primary.main' : 'transparent'}}>
+                      <ListItemText primary={item.public_id} secondary={d.toLocaleDateString() + ', ' + d.toLocaleTimeString()} />
+                    </ListItemButton>
+                  </ListItem>
+                )
+              })
+            }
+            </List>
+          </Box>
+        </Drawer>
+        <Box sx={{ flexGrow: 1 }}>
+          {submissionList.length > 0 && <RenderSubmission key={submissionList[selectedItem].public_id} data={submissionList[selectedItem]} />}
+        </Box>
+      </Box>
+    </>
     ) : (
+    <>
+      <HeaderBar siteURL={siteURL} />
       <SignIn />
+    </>
     )}
     </Container>
   );
@@ -133,44 +143,45 @@ function RenderSubmission({ data }: { data: SubmissionWithId }) {
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <Divider>
-        <Chip label={"Request " + data.id} />
-      </Divider>
-       <DataGrid
+    <Box sx={{ width: '100%', mt: 2 }}>
+      <Typography variant="h5" align="center" gutterBottom>Request ID: {data.public_id}</Typography>
+      <DataGrid sx={{ mb: 2 }}
           rows={[data]}
           columns={[
-            { field: "public_id", headerName: "ID", type: 'string', width: 120 },
-            { field: "submission_time", headerName: "Time", type: 'dateTime', valueGetter: (value) => { return new Date(value); }, width: 180},
-            { field: "http_method", headerName: "Method", type: "string", width: 100 },
-            { field: "remote_ip", headerName: "IP Address", type: 'string', width: 200 },
-            { field: "query_string", headerName: "Query String", type: 'string', width: 200 },
+            { field: "public_id", headerName: "ID", type: 'string', minWidth: 110 },
+            { field: "submission_time", headerName: "Time", type: 'dateTime', valueGetter: (value) => { return new Date(value); }},
+            { field: "http_method", headerName: "Method", type: "string" },
+            { field: "remote_ip", headerName: "IP Address", type: 'string' },
+            { field: "query_string", headerName: "Query String", type: 'string', flex: 1 },
           ]}
+          autosizeOnMount
           disableColumnMenu
           disableColumnSorting
           hideFooter
+          density="compact"
       />
-      <Divider />
-      <DataGrid
+      <Typography variant="h5" align="center" gutterBottom>Headers</Typography>
+      <DataGrid sx={{ mb: 2 }}
         rows={headers}
         columns={[
-          { field: "field", headerName: "Header Field", type: 'string', width: 200 },
-          { field: "value", headerName: "Value", type: 'string', width: 400 },
+          { field: "field", headerName: "Header Field", type: 'string', minWidth: 200 },
+          { field: "value", headerName: "Value", type: 'string', flex: 1 },
         ]}
         disableColumnMenu
         disableColumnSorting
         hideFooter
+        density="compact"
       />
-      <Divider />
+
       { data.http_method == 'GET' ? (
-        <Typography variant="body2">Empty Body for GET Request</Typography>
+        <Typography>Empty Body for GET Request</Typography>
       ) : (
         <>
-          <Typography variant="h5">Body</Typography>
+          <Typography variant="h5" align="center" gutterBottom>Body</Typography>
           { typeof content_as_json === 'object' ? (
             <JsonView data={content_as_json} shouldExpandNode={allExpanded} style={prefersDarkMode ? darkStyles : defaultStyles} clickToExpandNode />
           ) : (
-            <Typography variant="body1">{content_as_json}</Typography>
+            <Typography>{content_as_json}</Typography>
           )}
         </>
     )}
